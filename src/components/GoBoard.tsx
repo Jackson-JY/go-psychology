@@ -5,16 +5,18 @@ interface GoBoardProps {
   stones: PlacedStone[];
   userMove?: Coord | null;
   focus?: Coord;
+  highlightAreas?: Coord[];
   onPlace: (x: number, y: number) => void;
   disabled?: boolean;
-  size?: number; // CSS 像素，默认 320
+  size?: number;
+  showHint?: boolean;
 }
 
-const BOARD_N = 9; // 9x9
+const BOARD_N = 9;
 const STAR_POINTS: Coord[] = [
   { x: 2, y: 2 },
   { x: 6, y: 2 },
-  { x: 4, y: 4 }, // 天元
+  { x: 4, y: 4 },
   { x: 2, y: 6 },
   { x: 6, y: 6 },
 ];
@@ -23,19 +25,20 @@ export default function GoBoard({
   stones,
   userMove,
   focus,
+  highlightAreas = [],
   onPlace,
   disabled = false,
   size = 320,
+  showHint = false,
 }: GoBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ripple, setRipple] = useState<{ x: number; y: number; t: number } | null>(null);
+  const [hoverPoint, setHoverPoint] = useState<Coord | null>(null);
 
-  // padding = 1 个格子
   const padding = size / (BOARD_N + 1);
   const inner = size - padding * 2;
   const cellSize = inner / (BOARD_N - 1);
 
-  // 把交叉点坐标转 canvas 像素
   const toPx = useCallback(
     (c: Coord): { px: number; py: number } => ({
       px: padding + c.x * cellSize,
@@ -44,7 +47,23 @@ export default function GoBoard({
     [padding, cellSize],
   );
 
-  // 绘制
+  const findNearestPoint = useCallback((cx: number, cy: number): Coord | null => {
+    let best: { x: number; y: number; dist: number } | null = null;
+    for (let y = 0; y < BOARD_N; y++) {
+      for (let x = 0; x < BOARD_N; x++) {
+        const { px, py } = toPx({ x, y });
+        const d = Math.hypot(cx - px, cy - py);
+        if (!best || d < best.dist) {
+          best = { x, y, dist: d };
+        }
+      }
+    }
+    if (!best || best.dist > cellSize * 0.8) return null;
+    const occupied = stones.some((s) => s.x === best!.x && s.y === best!.y);
+    if (occupied) return null;
+    return { x: best.x, y: best.y };
+  }, [toPx, stones, cellSize]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -57,7 +76,6 @@ export default function GoBoard({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size, size);
 
-    // 1. 棋盘底色（宣纸米黄 + 微纹理）
     const grad = ctx.createLinearGradient(0, 0, size, size);
     grad.addColorStop(0, "#F8F2E2");
     grad.addColorStop(0.5, "#F2E8D0");
@@ -65,34 +83,28 @@ export default function GoBoard({
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, size, size);
 
-    // 微噪点（用稀疏小点模拟纸纹）
     ctx.fillStyle = "rgba(120, 90, 50, 0.05)";
     for (let i = 0; i < 80; i++) {
       ctx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
     }
 
-    // 2. 棋盘边框
     ctx.strokeStyle = "rgba(40, 30, 15, 0.55)";
     ctx.lineWidth = 1.4;
     ctx.strokeRect(padding, padding, inner, inner);
 
-    // 3. 网格线
     ctx.strokeStyle = "rgba(40, 30, 15, 0.4)";
     ctx.lineWidth = 1;
     for (let i = 0; i < BOARD_N; i++) {
-      // 横线
       ctx.beginPath();
       ctx.moveTo(padding, padding + i * cellSize);
       ctx.lineTo(padding + inner, padding + i * cellSize);
       ctx.stroke();
-      // 竖线
       ctx.beginPath();
       ctx.moveTo(padding + i * cellSize, padding);
       ctx.lineTo(padding + i * cellSize, padding + inner);
       ctx.stroke();
     }
 
-    // 4. 星位
     ctx.fillStyle = "rgba(20, 15, 8, 0.85)";
     for (const sp of STAR_POINTS) {
       const { px, py } = toPx(sp);
@@ -101,7 +113,19 @@ export default function GoBoard({
       ctx.fill();
     }
 
-    // 5. focus 高亮（淡淡的朱砂圈）
+    for (const area of highlightAreas) {
+      const { px, py } = toPx(area);
+      ctx.fillStyle = "rgba(200, 57, 43, 0.12)";
+      ctx.beginPath();
+      ctx.arc(px, py, cellSize * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(200, 57, 43, 0.25)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(px, py, cellSize * 0.6, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     if (focus) {
       const { px, py } = toPx(focus);
       ctx.strokeStyle = "rgba(200, 57, 43, 0.35)";
@@ -113,15 +137,42 @@ export default function GoBoard({
       ctx.setLineDash([]);
     }
 
-    // 6. 预设棋子
+    if (showHint && !disabled && !userMove) {
+      for (let y = 0; y < BOARD_N; y++) {
+        for (let x = 0; x < BOARD_N; x++) {
+          const occupied = stones.some((s) => s.x === x && s.y === y);
+          if (!occupied) {
+            const { px, py } = toPx({ x, y });
+            ctx.fillStyle = "rgba(200, 57, 43, 0.08)";
+            ctx.beginPath();
+            ctx.arc(px, py, cellSize * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
     for (const s of stones) {
       drawStone(ctx, toPx(s), s.color, cellSize * 0.46);
     }
 
-    // 7. 用户落子（最上层）
+    if (hoverPoint && !userMove && !disabled) {
+      const { px, py } = toPx(hoverPoint);
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = "rgba(20, 20, 20, 0.7)";
+      ctx.beginPath();
+      ctx.arc(px, py, cellSize * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.beginPath();
+      ctx.arc(px - cellSize * 0.15, py - cellSize * 0.15, cellSize * 0.12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     if (userMove) {
       drawStone(ctx, toPx(userMove), "B", cellSize * 0.46);
-      // 标号（朱砂小圆点）
       const { px, py } = toPx(userMove);
       ctx.fillStyle = "#C8392B";
       ctx.beginPath();
@@ -129,7 +180,6 @@ export default function GoBoard({
       ctx.fill();
     }
 
-    // 8. 涟漪
     if (ripple) {
       const elapsed = (performance.now() - ripple.t) / 600;
       if (elapsed < 1) {
@@ -144,9 +194,8 @@ export default function GoBoard({
         setRipple(null);
       }
     }
-  }, [size, padding, inner, cellSize, stones, userMove, focus, ripple, toPx]);
+  }, [size, padding, inner, cellSize, stones, userMove, focus, highlightAreas, ripple, hoverPoint, toPx, disabled, showHint]);
 
-  // 涟漪动画驱动
   useEffect(() => {
     if (!ripple) return;
     let raf = 0;
@@ -158,6 +207,23 @@ export default function GoBoard({
     return () => cancelAnimationFrame(raf);
   }, [ripple]);
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (disabled || !!userMove) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = size / rect.width;
+    const scaleY = size / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top) * scaleY;
+    const point = findNearestPoint(cx, cy);
+    setHoverPoint(point);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverPoint(null);
+  };
+
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (disabled) return;
     const canvas = canvasRef.current;
@@ -168,7 +234,6 @@ export default function GoBoard({
     const cx = (e.clientX - rect.left) * scaleX;
     const cy = (e.clientY - rect.top) * scaleY;
 
-    // 找最近交叉点
     let best: { x: number; y: number; dist: number } | null = null;
     for (let y = 0; y < BOARD_N; y++) {
       for (let x = 0; x < BOARD_N; x++) {
@@ -180,7 +245,6 @@ export default function GoBoard({
       }
     }
     if (!best) return;
-    // 点击热区：交叉点 1.2 个格子内
     if (best.dist > cellSize * 0.8) return;
 
     setRipple({ x: best.x, y: best.y, t: performance.now() });
@@ -192,6 +256,8 @@ export default function GoBoard({
       <canvas
         ref={canvasRef}
         onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         style={{
           width: "100%",
           height: "100%",
@@ -215,7 +281,6 @@ function drawStone(
   const { px, py } = pos;
   const r = Math.max(2, radius);
 
-  // 阴影
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.35)";
   ctx.shadowBlur = 6;
@@ -254,7 +319,6 @@ function drawStone(
   ctx.fill();
   ctx.restore();
 
-  // 高光
   ctx.fillStyle = color === "B" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.65)";
   ctx.beginPath();
   ctx.arc(px - r * 0.35, py - r * 0.35, r * 0.28, 0, Math.PI * 2);

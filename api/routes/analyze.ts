@@ -1,7 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { mapMovesToProfile } from "../lib/heatmap.js";
 import { callDeepSeek, hasDeepSeekKey } from "../lib/deepseek.js";
-import { mockComment } from "../lib/mock.js";
+import { mockComment, mockMbtiComment } from "../lib/mock.js";
+import { mapRadarToMbti } from "../lib/mbti.js";
 import type { AnalyzeRequest, AnalyzeResponse } from "@shared/types";
 
 const router = Router();
@@ -41,6 +42,9 @@ router.post("/", async (req: Request, res: Response) => {
 
   const profile = mapMovesToProfile(moves);
 
+  // 计算 MBTI
+  const mbti = mapRadarToMbti(profile.radar);
+
   let source: "deepseek" | "mock" = "mock";
   let headline: string;
   let comment: string;
@@ -63,12 +67,19 @@ router.post("/", async (req: Request, res: Response) => {
     comment = mock.comment;
   }
 
+  // 如果 comment 来自 mock，追加 MBTI 专属解读
+  if (source === "mock") {
+    const mbtiComment = mockMbtiComment(mbti.type);
+    comment = `${comment}\n\n【MBTI · ${mbti.type} · ${mbti.title}】\n${mbtiComment}`;
+  }
+
   const response: AnalyzeResponse = {
     radar: profile.radar,
     tags: profile.tags,
     comment,
     headline,
     source,
+    mbti,
   };
 
   res.json(response);

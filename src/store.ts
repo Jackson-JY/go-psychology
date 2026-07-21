@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { AnalyzeResponse, MoveRecord, PuzzleId } from "@/lib/types";
 import { SCENARIOS } from "@/lib/scenarios";
 
-export type Stage = "intro" | "play" | "loading" | "result" | "poster";
+export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster";
 
 interface GameState {
   stage: Stage;
@@ -13,6 +13,7 @@ interface GameState {
   error: string | null;
 
   start: () => void;
+  startPlay: () => void;
   recordMove: (puzzleId: PuzzleId, x: number, y: number) => void;
   nextScenario: () => void;
   setResult: (result: AnalyzeResponse) => void;
@@ -31,13 +32,26 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   start: () => {
     set({
-      stage: "play",
+      stage: "tutorial",
       currentScenarioIndex: 0,
       moves: [],
       scenarioStartTime: Date.now(),
       result: null,
       error: null,
     });
+  },
+
+  startPlay: () => {
+    set({
+      stage: "play",
+      currentScenarioIndex: 0,
+      moves: [],
+      scenarioStartTime: Date.now(),
+    });
+  },
+
+  startTutorial: () => {
+    set({ stage: "tutorial" });
   },
 
   recordMove: (puzzleId, x, y) => {

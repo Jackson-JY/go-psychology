@@ -62,11 +62,11 @@ export default function PlayStage() {
           <Seal char={scenario.title} size={32} />
           <div className="leading-tight">
             <div className="font-mono text-[10px] tracking-widest text-ink-900/50">
-              CASE 0{scenario.index} / 03
-            </div>
-            <div className="font-serif text-sm font-semibold text-ink-900">
-              第 {["一", "二", "三"][scenario.index - 1]} 关 · {scenario.subtitle}
-            </div>
+          QUESTION 0{scenario.index} / 03
+        </div>
+        <div className="font-serif text-sm font-semibold text-ink-900">
+          第 {["一", "二", "三"][scenario.index - 1]} 题 · {scenario.subtitle}
+        </div>
           </div>
         </div>
         <div className="flex gap-1.5">
@@ -97,7 +97,7 @@ export default function PlayStage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="mt-7 text-center"
+        className="mt-7 flex h-[100px] flex-col items-center justify-center text-center"
       >
         <div className="font-mono text-[10px] tracking-[0.3em] text-ink-900/40">
           SCENE
@@ -129,52 +129,54 @@ export default function PlayStage() {
       </div>
 
       {/* 底部确认区 */}
-      <AnimatePresence mode="wait">
-        {phase === "play" && (
-          <motion.footer
-            key="hint"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="mt-6 text-center font-mono text-[11px] tracking-widest text-ink-900/40"
-          >
-            点击交叉点落子 · 凭第一直觉
-          </motion.footer>
-        )}
+      <div className="mt-6 h-[80px]">
+        <AnimatePresence mode="wait">
+          {phase === "play" && (
+            <motion.footer
+              key="hint"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex h-full flex-col items-center justify-center text-center font-mono text-[11px] tracking-widest text-ink-900/40"
+            >
+              点击棋盘落子 · 凭第一反应
+            </motion.footer>
+          )}
 
-        {phase === "confirm" && (
-          <motion.footer
-            key="confirm"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-6 flex flex-col items-center gap-3"
-          >
-            <div className="font-mono text-[11px] tracking-widest text-cinnabar">
-              {progressText || "确认这一手？"}
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setUserMove(null);
-                  setPhase("play");
-                }}
-                className="font-mono text-[11px] tracking-widest text-ink-900/50 underline-offset-4 hover:underline"
-              >
-                ← 重选
-              </button>
-              <button
-                onClick={handleConfirm}
-                className="btn-ink !px-6 !py-2 text-sm"
-              >
-                {currentScenarioIndex < SCENARIOS.length - 1
-                  ? "下一手 →"
-                  : "出侧写 →"}
-              </button>
-            </div>
-          </motion.footer>
-        )}
-      </AnimatePresence>
+          {phase === "confirm" && (
+            <motion.footer
+              key="confirm"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex h-full flex-col items-center justify-center gap-2"
+            >
+              <div className="font-mono text-[11px] tracking-widest text-cinnabar">
+                {progressText || "确认这一手？"}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setUserMove(null);
+                    setPhase("play");
+                  }}
+                  className="font-mono text-[11px] tracking-widest text-ink-900/50 underline-offset-4 hover:underline"
+                >
+                  ← 重选
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  className="btn-ink !px-6 !py-2 text-sm"
+                >
+                  {currentScenarioIndex < SCENARIOS.length - 1
+                    ? "下一手 →"
+                    : "出侧写 →"}
+                </button>
+              </div>
+            </motion.footer>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

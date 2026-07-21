@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import IntroStage from "@/stages/IntroStage";
+import TutorialStage from "@/stages/TutorialStage";
 import PlayStage from "@/stages/PlayStage";
 import LoadingStage from "@/stages/LoadingStage";
 import ResultStage from "@/stages/ResultStage";
@@ -26,6 +27,7 @@ export default function App() {
           transition={{ duration: 0.4 }}
         >
           {stage === "intro" && <IntroStage />}
+          {stage === "tutorial" && <TutorialStage />}
           {stage === "play" && <PlayStage />}
           {stage === "loading" && <LoadingStage />}
           {stage === "result" && <ResultStage />}

@@ -37,6 +37,25 @@ export interface AnalyzeRequest {
   moves: MoveRecord[];
 }
 
+/** MBTI 结果 */
+export interface MbtiData {
+  type: string; // e.g. "INTJ"
+  letters: {
+    ei: "E" | "I";
+    sn: "S" | "N";
+    tf: "T" | "F";
+    jp: "J" | "P";
+  };
+  scores: {
+    ei: number;
+    sn: number;
+    tf: number;
+    jp: number;
+  };
+  title: string;
+  subtitle: string;
+}
+
 /** /api/analyze 响应体 */
 export interface AnalyzeResponse {
   radar: RadarData;
@@ -44,6 +63,7 @@ export interface AnalyzeResponse {
   comment: string;
   headline: string;
   source: "deepseek" | "mock";
+  mbti: MbtiData;
 }
 
 /** 单关残局配置 */
