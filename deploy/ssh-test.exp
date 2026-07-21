@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+set timeout 10
+set host [lindex $argv 0]
+set password [lindex $argv 1]
+
+spawn ssh -o StrictHostKeyChecking=no root@$host "echo SSH_OK"
+expect {
+    "password:" {
+        send "$password\r"
+        expect {
+            "SSH_OK" {
+                puts "\nSSH login successful"
+                exit 0
+            }
+            "Permission denied" {
+                puts "\nSSH login failed: permission denied"
+                exit 1
+            }
+        }
+    }
+    "SSH_OK" {
+        puts "\nSSH login successful (key auth)"
+        exit 0
+    }
+    timeout {
+        puts "\nSSH connection timeout"
+        exit 1
+    }
+}

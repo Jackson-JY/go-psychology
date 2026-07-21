@@ -1,0 +1,11 @@
+#!/usr/bin/expect -f
+set timeout 120
+set host [lindex $argv 0]
+set password [lindex $argv 1]
+set local [lindex $argv 2]
+set remote [lindex $argv 3]
+
+spawn scp -o StrictHostKeyChecking=no $local root@$host:$remote
+expect "password:"
+send "$password\r"
+expect eof

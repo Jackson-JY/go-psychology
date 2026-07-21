@@ -1,0 +1,97 @@
+import { motion } from "framer-motion";
+import InkParticles from "@/components/InkParticles";
+import Seal from "@/components/Seal";
+import { useGameStore } from "@/store";
+
+export default function IntroStage() {
+  const start = useGameStore((s) => s.start);
+
+  return (
+    <div className="relative flex h-[100dvh] min-h-[560px] flex-col items-center overflow-hidden bg-paper-100 px-6 py-10">
+      <InkParticles />
+
+      {/* 顶部 logo 印 */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="flex w-full items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <Seal char="墨" size={28} />
+          <span className="font-mono text-[10px] tracking-[0.3em] text-ink-900/60">
+            MO·PSYCHE
+          </span>
+        </div>
+        <span className="font-mono text-[10px] tracking-widest text-ink-900/40">
+          v0.1 · 9×9
+        </span>
+      </motion.div>
+
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-6"
+        >
+          <div className="font-serif text-[64px] leading-none text-ink-900 sm:text-[80px]" style={{ fontWeight: 900 }}>
+            黑白
+          </div>
+          <div className="font-serif text-[34px] font-semibold leading-none text-cinnabar -mt-1 sm:text-[42px]">
+            潜意识
+          </div>
+          <div className="mx-auto mt-2 h-px w-12 bg-ink-900/40" />
+          <div className="mt-2 font-mono text-[9px] tracking-[0.4em] text-ink-900/50">
+            AI · GO · PSYCHE
+          </div>
+        </motion.div>
+
+        <div className="mb-8 space-y-1">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="font-kai text-lg leading-relaxed text-ink-900"
+          >
+            你以为你在下棋，
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.0, duration: 0.8 }}
+            className="font-kai text-lg leading-relaxed text-ink-900"
+          >
+            其实是你的
+            <span className="font-semibold text-cinnabar">潜意识</span>
+            在做决定。
+          </motion.p>
+        </div>
+
+        <motion.button
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.6 }}
+          onClick={start}
+          className="btn-ink"
+        >
+          开始觉察 →
+        </motion.button>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.0, duration: 0.6 }}
+          className="mt-8 flex flex-col items-center gap-1 font-mono text-[10px] tracking-widest text-ink-900/40"
+        >
+          <span>3 关残局 · 1 分钟 · 即玩即测</span>
+          <span className="text-cinnabar/60">凭第一直觉落子</span>
+        </motion.div>
+      </main>
+
+      <footer className="font-mono text-[9px] tracking-widest text-ink-900/30">
+        BAI · DAO · PSYCHE / 黑白潜意识心理沙盘
+      </footer>
+    </div>
+  );
+}

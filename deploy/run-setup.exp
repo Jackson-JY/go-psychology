@@ -1,0 +1,21 @@
+#!/usr/bin/expect -f
+set timeout -1
+set host [lindex $argv 0]
+set password [lindex $argv 1]
+
+spawn ssh -o StrictHostKeyChecking=no root@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "mkdir -p /var/www/go-psychology && rm -rf /var/www/go-psychology/*\r"
+expect "#"
+
+send "tar -xzf /tmp/go-psychology.tar.gz -C /var/www/go-psychology\r"
+expect "#"
+
+send "cd /var/www/go-psychology && bash deploy/setup.sh local\r"
+expect "#"
+
+send "exit\r"
+expect eof

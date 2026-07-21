@@ -1,0 +1,22 @@
+#!/usr/bin/expect -f
+set timeout -1
+set host [lindex $argv 0]
+set password [lindex $argv 1]
+set repo [lindex $argv 2]
+
+spawn ssh -o StrictHostKeyChecking=no root@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "curl -fsSL https://raw.githubusercontent.com/jackson-trae/go-psychology/main/deploy/setup.sh -o /tmp/setup.sh\r"
+expect "#"
+
+send "chmod +x /tmp/setup.sh\r"
+expect "#"
+
+send "/tmp/setup.sh $repo\r"
+expect "#"
+
+send "exit\r"
+expect eof
