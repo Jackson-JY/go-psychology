@@ -10,4 +10,4 @@ dist-api/
 *.log
 logs/
 screenshots/
-scripts/
+scripts/._*
