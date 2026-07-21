@@ -1,7 +1,7 @@
 // 前后端共享的类型定义
 
-/** 3 关残局 ID */
-export type PuzzleId = "siege" | "greed" | "overall";
+/** 4 关残局 ID */
+export type PuzzleId = "siege" | "greed" | "overall" | "tradeoff";
 
 /** 围棋交叉点坐标（0-8） */
 export interface Coord {
@@ -23,13 +23,17 @@ export interface MoveRecord extends Coord {
   elapsedMs: number; // 思考时长（毫秒）
 }
 
-/** 性格雷达 5 维数据（0-100） */
+/** 性格雷达 8 维数据（0-100） */
 export interface RadarData {
   sunkCost: number; // 沉没成本谬误
   riskAppetite: number; // 风险偏好
   bigPicture: number; // 大局观
   decisiveness: number; // 决断力
   controlDesire: number; // 掌控欲
+  emotionalStability: number; // 情绪稳定性
+  cooperation: number; // 合作倾向
+  innovation: number; // 创新思维
+  patience: number; // 耐心程度
 }
 
 /** /api/analyze 请求体 */
@@ -56,6 +60,47 @@ export interface MbtiData {
   subtitle: string;
 }
 
+/** Big Five 大五人格结果 */
+export interface BigFiveData {
+  openness: number; // 开放性
+  conscientiousness: number; // 尽责性
+  extraversion: number; // 外向性
+  agreeableness: number; // 宜人性
+  neuroticism: number; // 神经质/情绪稳定性
+  type: string; // 类型名称
+  description: string;
+}
+
+/** 投资风格分析 */
+export interface InvestmentStyle {
+  type: string; // 风格类型
+  riskLevel: "conservative" | "moderate" | "aggressive"; // 风险等级
+  suitableStrategies: string[]; // 适合的投资策略
+  pitfalls: string[]; // 常见误区
+  recommendations: string[]; // 建议
+}
+
+/** 职场建议 */
+export interface CareerAdvice {
+  suitableRoles: string[]; // 适合的岗位
+  leadershipStyle: string; // 领导力风格
+  collaborationStyle: string; // 协作风格
+  growthAreas: string[]; // 成长领域
+}
+
+/** 热力图数据 */
+export interface HeatmapData {
+  grid: number[][]; // 9x9 热力值网格
+  peaks: { x: number; y: number; value: number }[]; // 峰值点
+}
+
+/** 深度分析报告 */
+export interface DeepReport {
+  strengths: { dimension: string; score: number; description: string }[]; // 优势
+  weaknesses: { dimension: string; score: number; description: string }[]; // 待改进
+  insights: string[]; // 关键洞察
+}
+
 /** /api/analyze 响应体 */
 export interface AnalyzeResponse {
   radar: RadarData;
@@ -64,6 +109,11 @@ export interface AnalyzeResponse {
   headline: string;
   source: "deepseek" | "mock";
   mbti: MbtiData;
+  bigFive: BigFiveData;
+  investment: InvestmentStyle;
+  career: CareerAdvice;
+  heatmap: HeatmapData;
+  deepReport: DeepReport;
 }
 
 /** 单关残局配置 */

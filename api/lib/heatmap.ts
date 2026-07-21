@@ -112,49 +112,79 @@ const HEATMAP: Record<PuzzleId, HeatZone[]> = {
   // 第 3 关 · 局：全盘稀疏
   overall: [
     {
-      // 角部星位（左上、右上、左下、右下）
       rect: { x0: 2, y0: 2, x1: 2, y1: 2 },
       tags: ["大局观", "经典格局", "厚实主义"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8 },
+      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
       rationale: "选择角部星位，大局观好，遵循经典格局",
     },
     {
       rect: { x0: 6, y0: 2, x1: 6, y1: 2 },
       tags: ["大局观", "经典格局"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8 },
+      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
       rationale: "选择角部星位，大局观好，遵循经典格局",
     },
     {
       rect: { x0: 2, y0: 6, x1: 2, y1: 6 },
       tags: ["大局观", "经典格局"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8 },
+      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
       rationale: "选择角部星位，大局观好，遵循经典格局",
     },
     {
       rect: { x0: 6, y0: 6, x1: 6, y1: 6 },
       tags: ["大局观", "经典格局"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8 },
+      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
       rationale: "选择角部星位，大局观好，遵循经典格局",
     },
     {
-      // 天元（中央 4,4）
       rect: { x0: 4, y0: 4, x1: 4, y1: 4 },
       tags: ["掌控欲", "全局统御", "英雄主义"],
-      delta: { controlDesire: +35, bigPicture: +15, riskAppetite: +10 },
+      delta: { controlDesire: +35, bigPicture: +15, riskAppetite: +10, innovation: +15 },
       rationale: "直取天元，掌控欲极强，有英雄主义倾向",
     },
     {
-      // 边线
       rect: { x0: 0, y0: 4, x1: 0, y1: 4 },
       tags: ["防御性人格", "边缘站位"],
-      delta: { riskAppetite: -12, bigPicture: -8, controlDesire: -10 },
+      delta: { riskAppetite: -12, bigPicture: -8, controlDesire: -10, patience: +8 },
       rationale: "落子边线，防御性人格，倾向边缘站位",
     },
     {
       rect: { x0: 8, y0: 4, x1: 8, y1: 4 },
       tags: ["防御性人格", "边缘站位"],
-      delta: { riskAppetite: -12, bigPicture: -8, controlDesire: -10 },
+      delta: { riskAppetite: -12, bigPicture: -8, controlDesire: -10, patience: +8 },
       rationale: "落子边线，防御性人格，倾向边缘站位",
+    },
+  ],
+  // 第 4 关 · 舍：弃子保全局的取舍
+  tradeoff: [
+    {
+      rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
+      tags: ["执念深", "不愿放手", "沉没成本"],
+      delta: { sunkCost: +40, decisiveness: -15, patience: -10, emotionalStability: -12 },
+      rationale: "明知已被包围仍试图救援，不愿接受损失，沉没成本谬误严重",
+    },
+    {
+      rect: { x0: 5, y0: 5, x1: 8, y1: 8 },
+      tags: ["果断止损", "面向未来", "战略转移"],
+      delta: { bigPicture: +35, decisiveness: +20, sunkCost: -25, emotionalStability: +18 },
+      rationale: "放弃被围棋子，转向右上方新机会，懂得止损，大局观强",
+    },
+    {
+      rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
+      tags: ["犹豫观望", "中间路线"],
+      delta: { decisiveness: -10, bigPicture: +5, cooperation: +8 },
+      rationale: "选择中间地带观望，既不救援也不进取，决策偏保守",
+    },
+    {
+      rect: { x0: 0, y0: 5, x1: 2, y1: 8 },
+      tags: ["防御性转移", "稳健撤退"],
+      delta: { riskAppetite: -15, patience: +15, emotionalStability: +10 },
+      rationale: "向左侧安全区域转移，优先保障生存，耐心等待时机",
+    },
+    {
+      rect: { x0: 5, y0: 0, x1: 8, y1: 2 },
+      tags: ["积极开拓", "创新思维"],
+      delta: { innovation: +25, riskAppetite: +15, controlDesire: +10 },
+      rationale: "抢占上方空白区域，展现创新思维，积极开拓新领域",
     },
   ],
 };
@@ -166,14 +196,23 @@ const BASE_RADAR: RadarData = {
   bigPicture: 50,
   decisiveness: 50,
   controlDesire: 50,
+  emotionalStability: 50,
+  cooperation: 50,
+  innovation: 50,
+  patience: 50,
 };
 
-/** 思考时长对决断力的影响：<3s 果断+；>10s 犹豫- */
-function timeEffect(elapsedMs: number): number {
-  if (elapsedMs < 3000) return +12;
-  if (elapsedMs < 6000) return +4;
-  if (elapsedMs < 10000) return -4;
-  return -14;
+function timeEffect(elapsedMs: number): { decisiveness: number; patience: number; emotionalStability: number } {
+  if (elapsedMs < 3000) {
+    return { decisiveness: +12, patience: -8, emotionalStability: +5 };
+  }
+  if (elapsedMs < 6000) {
+    return { decisiveness: +4, patience: +2, emotionalStability: +3 };
+  }
+  if (elapsedMs < 10000) {
+    return { decisiveness: -4, patience: +6, emotionalStability: -2 };
+  }
+  return { decisiveness: -14, patience: +12, emotionalStability: -8 };
 }
 
 /** 限制 0-100 */
@@ -187,7 +226,6 @@ export interface AnalyzeInternal {
   rationales: string[]; // 每关落子理由，用于 prompt
 }
 
-/** 把 3 关落子映射为雷达 + 标签 */
 export function mapMovesToProfile(moves: MoveRecord[]): AnalyzeInternal {
   const radar: RadarData = { ...BASE_RADAR };
   const tagSet = new Set<string>();
@@ -203,13 +241,14 @@ export function mapMovesToProfile(moves: MoveRecord[]): AnalyzeInternal {
         radar[k] += v;
       }
     } else {
-      // 未命中热区：当作中性探索
       rationales.push(`【${move.puzzleId}】落子位置游离，未明显倾向，性格克制不冒头`);
     }
-    radar.decisiveness += timeEffect(move.elapsedMs);
+    const timeEffects = timeEffect(move.elapsedMs);
+    radar.decisiveness += timeEffects.decisiveness;
+    radar.patience += timeEffects.patience;
+    radar.emotionalStability += timeEffects.emotionalStability;
   }
 
-  // 限制范围
   (Object.keys(radar) as RadarKey[]).forEach((k) => {
     radar[k] = clamp(radar[k]);
   });

@@ -3,11 +3,15 @@ import { mapMovesToProfile } from "../lib/heatmap.js";
 import { callDeepSeek, hasDeepSeekKey } from "../lib/deepseek.js";
 import { mockComment, mockMbtiComment } from "../lib/mock.js";
 import { mapRadarToMbti } from "../lib/mbti.js";
+import { mapRadarToBigFive } from "../lib/bigFive.js";
+import { mapRadarToInvestment } from "../lib/investment.js";
+import { mapRadarToCareer } from "../lib/career.js";
+import { generateHeatmap } from "../lib/heatmapData.js";
+import { generateDeepReport } from "../lib/deepReport.js";
 import type { AnalyzeRequest, AnalyzeResponse } from "@shared/types";
 
 const router = Router();
 
-/** 简易频率限制：内存计数，10 req/min/IP */
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
@@ -35,15 +39,19 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(400).json({ error: "缺少 moves 数据" });
     return;
   }
-  if (moves.length > 3) {
+  if (moves.length > 4) {
     res.status(400).json({ error: "moves 数量异常" });
     return;
   }
 
   const profile = mapMovesToProfile(moves);
 
-  // 计算 MBTI
   const mbti = mapRadarToMbti(profile.radar);
+  const bigFive = mapRadarToBigFive(profile.radar);
+  const investment = mapRadarToInvestment(profile.radar);
+  const career = mapRadarToCareer(profile.radar);
+  const heatmap = generateHeatmap(moves);
+  const deepReport = generateDeepReport(profile.radar);
 
   let source: "deepseek" | "mock" = "mock";
   let headline: string;
@@ -67,7 +75,6 @@ router.post("/", async (req: Request, res: Response) => {
     comment = mock.comment;
   }
 
-  // 如果 comment 来自 mock，追加 MBTI 专属解读
   if (source === "mock") {
     const mbtiComment = mockMbtiComment(mbti.type);
     comment = `${comment}\n\n【MBTI · ${mbti.type} · ${mbti.title}】\n${mbtiComment}`;
@@ -80,6 +87,11 @@ router.post("/", async (req: Request, res: Response) => {
     headline,
     source,
     mbti,
+    bigFive,
+    investment,
+    career,
+    heatmap,
+    deepReport,
   };
 
   res.json(response);

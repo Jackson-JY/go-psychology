@@ -8,4 +8,10 @@ export type {
   Coord,
   PlacedStone,
   StoneColor,
+  HeatmapData,
+  BigFiveData,
+  InvestmentStyle,
+  CareerAdvice,
+  DeepReport,
+  MbtiData,
 } from "@shared/types";

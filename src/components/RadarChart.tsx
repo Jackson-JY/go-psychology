@@ -16,6 +16,9 @@ const AXES: AxisDef[] = [
   { key: "bigPicture", label: "大局观" },
   { key: "decisiveness", label: "决断力" },
   { key: "controlDesire", label: "掌控欲" },
+  { key: "emotionalStability", label: "情绪稳定" },
+  { key: "cooperation", label: "合作倾向" },
+  { key: "innovation", label: "创新思维" },
 ];
 
 export default function RadarChart({ data, size = 240 }: RadarChartProps) {

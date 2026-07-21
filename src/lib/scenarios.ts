@@ -41,6 +41,25 @@ const overallStones = [
   { x: 6, y: 6, color: "B" as const },
 ];
 
+// 第 4 关 · 舍：弃子保全局的取舍
+const tradeoffStones = [
+  // 左下角被围的黑子（需要舍弃）
+  { x: 1, y: 1, color: "B" as const },
+  { x: 0, y: 1, color: "B" as const },
+  { x: 1, y: 0, color: "B" as const },
+  // 包围黑子的白子
+  { x: 0, y: 0, color: "W" as const },
+  { x: 2, y: 0, color: "W" as const },
+  { x: 2, y: 1, color: "W" as const },
+  { x: 2, y: 2, color: "W" as const },
+  { x: 0, y: 2, color: "W" as const },
+  { x: 1, y: 2, color: "W" as const },
+  // 右上大片空白区域（新机会）
+  { x: 6, y: 6, color: "B" as const },
+  { x: 7, y: 7, color: "B" as const },
+  { x: 5, y: 7, color: "W" as const },
+];
+
 export const SCENARIOS: Scenario[] = [
   {
     id: "siege",
@@ -70,5 +89,15 @@ export const SCENARIOS: Scenario[] = [
     prompt: "一切刚刚开始，胜负未定。你的直觉会把第一颗棋子放在哪里？",
     hint: "你的选择将决定未来的格局",
     stones: overallStones,
+  },
+  {
+    id: "tradeoff",
+    index: 4,
+    title: "舍",
+    subtitle: "取舍之间",
+    prompt: "左下角的团队已经被包围，继续救援只会损失更多。你会选择放弃沉没成本，转向右上方的新机会吗？",
+    hint: "有时候放弃，是为了更好的开始",
+    stones: tradeoffStones,
+    focus: { x: 1, y: 1 },
   },
 ];
