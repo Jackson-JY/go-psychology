@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GoBoard from "@/components/GoBoard";
 import Seal from "@/components/Seal";
@@ -55,63 +55,59 @@ export default function TutorialStage() {
   const [currentStep, setCurrentStep] = useState<TutorialStep>(1);
   const [userMove, setUserMove] = useState<Coord | null>(null);
   const [phase, setPhase] = useState<"play" | "success">("play");
-  const [showCapture, setShowCapture] = useState(false);
   const [captured, setCaptured] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const step = TUTORIAL_STEPS[currentStep - 1];
 
   useEffect(() => {
     setUserMove(null);
     setPhase("play");
-    setShowCapture(false);
     setCaptured(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
   }, [currentStep]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const autoAdvance = () => {
+    setTimeout(() => {
+      setCaptured(true);
+    }, 800);
+
+    timerRef.current = setTimeout(() => {
+      if (currentStep < 2) {
+        setCurrentStep((prev) => (prev + 1) as TutorialStep);
+      } else {
+        startPlay();
+      }
+    }, 2500);
+  };
 
   const handlePlace = (x: number, y: number) => {
     if (phase !== "play") return;
-    
+
     if (currentStep === 2) {
       const target = (step as typeof TUTORIAL_STEPS[1]).targetMove;
       if (x !== target.x || y !== target.y) {
         return;
       }
     }
-    
+
     setUserMove({ x, y });
-  };
-
-  const handleConfirm = () => {
     setPhase("success");
-    setShowCapture(true);
-
-    setTimeout(() => {
-      setCaptured(true);
-    }, 800);
-
-    setTimeout(() => {
-      if (currentStep < 2) {
-        setCurrentStep((prev) => (prev + 1) as TutorialStep);
-      } else {
-        startPlay();
-      }
-    }, 2500);
+    autoAdvance();
   };
 
   const handleNext = () => {
     setPhase("success");
-    setShowCapture(true);
-    
-    setTimeout(() => {
-      setCaptured(true);
-    }, 800);
-    
-    setTimeout(() => {
-      if (currentStep < 2) {
-        setCurrentStep((prev) => (prev + 1) as TutorialStep);
-      } else {
-        startPlay();
-      }
-    }, 2500);
+    autoAdvance();
   };
 
   const displayStones = captured && step.showCapture
@@ -195,21 +191,6 @@ export default function TutorialStage() {
         </motion.div>
       </div>
 
-      <AnimatePresence>
-        {showCapture && !captured && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          >
-            <div className="bg-cinnabar text-white px-4 py-2 rounded-full font-mono text-sm tracking-wider shadow-lg">
-              提子！
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="mt-6 h-[100px]">
         <AnimatePresence mode="wait">
           {phase === "success" && captured && (
@@ -229,7 +210,7 @@ export default function TutorialStage() {
             </motion.div>
           )}
 
-          {phase === "play" && !userMove && (
+          {phase === "play" && (
             <motion.footer
               key="hint"
               initial={{ opacity: 0 }}
@@ -248,26 +229,6 @@ export default function TutorialStage() {
                   明白了 →
                 </button>
               )}
-            </motion.footer>
-          )}
-
-          {phase === "play" && userMove && step.expectedAction === "place" && (
-            <motion.footer
-              key="confirm"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex h-full flex-col items-center justify-center gap-2"
-            >
-              <div className="font-mono text-[11px] tracking-widest text-cinnabar animate-pulse">
-                就在这里！
-              </div>
-              <button
-                onClick={handleConfirm}
-                className="btn-ink !px-6 !py-2 text-sm"
-              >
-                吃掉它！ →
-              </button>
             </motion.footer>
           )}
         </AnimatePresence>

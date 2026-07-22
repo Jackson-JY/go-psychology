@@ -74,32 +74,41 @@ export function generateDeepReport(radar: RadarData): DeepReport {
 
   const insights: string[] = [];
 
-  if (radar.bigPicture >= 70 && radar.decisiveness >= 70) {
-    insights.push("战略视野与执行能力兼备，是难得的决策者特质");
+  // 大局与局部
+  if (radar.bigPicture >= 70 && radar.sunkCost <= 40) {
+    insights.push("大局观强且不被沉没成本束缚，能在关键时刻做出取舍");
   }
-  if (radar.riskAppetite >= 70 && radar.patience <= 35) {
-    insights.push("高风险偏好但缺乏耐心，容易在市场波动中被情绪左右");
+  if (radar.bigPicture <= 35 && radar.sunkCost >= 60) {
+    insights.push("容易被局部得失牵绊，难以跳出来看全局");
   }
-  if (radar.cooperation >= 70 && radar.controlDesire <= 35) {
-    insights.push("天生的团队合作者，善于倾听但需要提升决策主导能力");
+  if (radar.bigPicture >= 60 && radar.controlDesire >= 60) {
+    insights.push("既有全局视野又有掌控欲，善于主导局面走向");
   }
-  if (radar.sunkCost >= 70) {
-    insights.push("强烈的损失厌恶可能导致在错误方向上继续投入");
+
+  // 风险与收益
+  if (radar.riskAppetite >= 70 && radar.emotionalStability <= 40) {
+    insights.push("敢于冒险但情绪稳定性不足，容易在压力下做出冲动决策");
   }
-  if (radar.innovation >= 70 && radar.bigPicture >= 65) {
-    insights.push("创新思维与大局观结合，善于发现蓝海机会");
+  if (radar.riskAppetite <= 35 && radar.patience >= 60) {
+    insights.push("稳健而耐心，适合长期主义但可能错过爆发性机会");
   }
-  if (radar.emotionalStability >= 70 && radar.patience >= 60) {
-    insights.push("强大的情绪管理能力让你在压力下保持冷静，是长期主义者");
+  if (radar.riskAppetite >= 60 && radar.decisiveness >= 60) {
+    insights.push("风险偏好与决断力兼具，面对机会时能快速出手");
   }
-  if (radar.decisiveness >= 70 && radar.riskAppetite <= 35) {
-    insights.push("果断但保守，善于在安全范围内做出最优选择");
+
+  // 进攻与退让
+  if (radar.riskAppetite >= 70 && radar.cooperation <= 40) {
+    insights.push("进攻性强，但在冲突中容易把对抗作为首选");
   }
-  if (radar.controlDesire >= 70 && radar.cooperation <= 35) {
-    insights.push("掌控欲强但合作意愿低，可能影响团队协同效率");
+  if (radar.cooperation >= 60 && radar.controlDesire <= 40) {
+    insights.push("善于退让与协调，但需警惕在关键利益上过度妥协");
   }
-  if (strengths.length === 0 && weaknesses.length === 0) {
-    insights.push("各项特质均衡发展，善于根据不同情境灵活调整策略");
+  if (radar.riskAppetite >= 50 && radar.cooperation >= 50) {
+    insights.push("攻守平衡，懂得在对抗与合作之间灵活切换");
+  }
+
+  if (insights.length === 0) {
+    insights.push("你的决策风格较为均衡，没有极端偏向");
   }
 
   return {

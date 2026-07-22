@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GoBoard from "@/components/GoBoard";
 import CharStream from "@/components/CharStream";
@@ -6,6 +6,8 @@ import Seal from "@/components/Seal";
 import { SCENARIOS, useGameStore } from "@/store";
 import { analyzeMoves } from "@/lib/api";
 import type { Coord } from "@/lib/types";
+
+const AUTO_ADVANCE_MS = 2000;
 
 export default function PlayStage() {
   const {
@@ -18,31 +20,36 @@ export default function PlayStage() {
 
   const scenario = SCENARIOS[currentScenarioIndex];
   const [userMove, setUserMove] = useState<Coord | null>(null);
-  const [phase, setPhase] = useState<"play" | "confirm">("play");
-  const [progressText, setProgressText] = useState("");
+  const [phase, setPhase] = useState<"play" | "placed">("play");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userMoveRef = useRef<Coord | null>(null);
 
   // 切关时重置
   useEffect(() => {
     setUserMove(null);
+    userMoveRef.current = null;
     setPhase("play");
-    setProgressText("");
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
   }, [currentScenarioIndex]);
 
-  const handlePlace = (x: number, y: number) => {
-    if (phase !== "play") return;
-    setUserMove({ x, y });
-    setPhase("confirm");
-  };
+  // 卸载时清理 timer
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
-  const handleConfirm = async () => {
-    if (!userMove) return;
-    recordMove(scenario.id, userMove.x, userMove.y);
+  const advance = async () => {
+    const coord = userMoveRef.current;
+    if (!coord) return;
+    recordMove(scenario.id, coord.x, coord.y);
 
     if (currentScenarioIndex < SCENARIOS.length - 1) {
-      setProgressText("好棋。下一关。");
-      setTimeout(() => nextScenario(), 900);
+      nextScenario();
     } else {
-      // 最后一关：进入 loading 后调 API
       useGameStore.setState({ stage: "loading" });
       try {
         const finalMoves = useGameStore.getState().moves;
@@ -54,6 +61,18 @@ export default function PlayStage() {
     }
   };
 
+  const handlePlace = (x: number, y: number) => {
+    if (phase !== "play") return;
+    const coord = { x, y };
+    setUserMove(coord);
+    userMoveRef.current = coord;
+    setPhase("placed");
+    // 2 秒后自动进入下一步
+    timerRef.current = setTimeout(() => {
+      advance();
+    }, AUTO_ADVANCE_MS);
+  };
+
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-paper-100 px-5 py-6">
       {/* 顶部：进度 + 关卡 */}
@@ -62,11 +81,11 @@ export default function PlayStage() {
           <Seal char={scenario.title} size={32} />
           <div className="leading-tight">
             <div className="font-mono text-[10px] tracking-widest text-ink-900/50">
-          QUESTION 0{scenario.index} / 03
-        </div>
-        <div className="font-serif text-sm font-semibold text-ink-900">
-          第 {["一", "二", "三"][scenario.index - 1]} 题 · {scenario.subtitle}
-        </div>
+              QUESTION 0{scenario.index} / 0{SCENARIOS.length}
+            </div>
+            <div className="font-serif text-sm font-semibold text-ink-900">
+              第 {["一", "二", "三", "四"][scenario.index - 1]} 题 · {scenario.subtitle}
+            </div>
           </div>
         </div>
         <div className="flex gap-1.5">
@@ -128,8 +147,8 @@ export default function PlayStage() {
         </motion.div>
       </div>
 
-      {/* 底部确认区 */}
-      <div className="mt-6 h-[80px]">
+      {/* 底部提示区 - 固定高度，无确认按钮 */}
+      <div className="mt-6 h-[80px] flex flex-col items-center justify-center text-center">
         <AnimatePresence mode="wait">
           {phase === "play" && (
             <motion.footer
@@ -137,42 +156,21 @@ export default function PlayStage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex h-full flex-col items-center justify-center text-center font-mono text-[11px] tracking-widest text-ink-900/40"
+              className="font-mono text-[11px] tracking-widest text-ink-900/40"
             >
               点击棋盘落子 · 凭第一反应
             </motion.footer>
           )}
 
-          {phase === "confirm" && (
+          {phase === "placed" && (
             <motion.footer
-              key="confirm"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              key="placed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex h-full flex-col items-center justify-center gap-2"
+              className="font-mono text-[11px] tracking-widest text-cinnabar"
             >
-              <div className="font-mono text-[11px] tracking-widest text-cinnabar">
-                {progressText || "确认这一手？"}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setUserMove(null);
-                    setPhase("play");
-                  }}
-                  className="font-mono text-[11px] tracking-widest text-ink-900/50 underline-offset-4 hover:underline"
-                >
-                  ← 重选
-                </button>
-                <button
-                  onClick={handleConfirm}
-                  className="btn-ink !px-6 !py-2 text-sm"
-                >
-                  {currentScenarioIndex < SCENARIOS.length - 1
-                    ? "下一手 →"
-                    : "出侧写 →"}
-                </button>
-              </div>
+              已落子 · 正在进入下一题
             </motion.footer>
           )}
         </AnimatePresence>

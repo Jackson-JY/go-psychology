@@ -25,166 +25,127 @@ function inRect(c: Coord, r: Rect): boolean {
 }
 
 /**
- * 3 关残局热区配置
+ * 4 关残局热区配置
  * 坐标范围 0-8，原点左上
  */
 const HEATMAP: Record<PuzzleId, HeatZone[]> = {
-  // 第 1 关 · 围：黑 3 子被白 5 子包围在中央
-  siege: [
+  // 第 1 关 · 死活困境：测试损失厌恶与止损决策
+  lifeDeath: [
     {
-      // 死子附近（贴着死子救援）
-      rect: { x0: 2, y0: 2, x1: 5, y1: 5 },
-      tags: ["执念深", "沉没成本谬误", "团队至上"],
-      delta: { sunkCost: +35, decisiveness: -8, bigPicture: -10 },
-      rationale: "明知被困仍贴身救援死子，沉没成本谬误显著，难以止损",
+      // 强行突围：在死子附近继续投入
+      rect: { x0: 0, y0: 5, x1: 3, y1: 8 },
+      tags: ["执念深", "沉没成本谬误", "损失厌恶"],
+      delta: { sunkCost: +40, decisiveness: -12, bigPicture: -10, emotionalStability: -10 },
+      rationale: "被围残子已无生路，仍强行突围救援，损失厌恶显著，难以止损",
     },
     {
-      // 外围开阔地（远离战场）
-      rect: { x0: 0, y0: 0, x1: 1, y1: 8 },
-      tags: ["大局观好", "果断止损", "战略定力"],
-      delta: { bigPicture: +30, riskAppetite: -10, decisiveness: +15 },
-      rationale: "放弃局部、转向外围开阔地，大局观强、懂得及时止损",
+      // 弃子封外：在右上方或外围构筑厚势
+      rect: { x0: 4, y0: 0, x1: 8, y1: 5 },
+      tags: ["果断止损", "大局观好", "战略定力"],
+      delta: { bigPicture: +35, decisiveness: +18, sunkCost: -25, emotionalStability: +15 },
+      rationale: "放弃濒死残子，转而在外围构筑厚势，懂得止损、放眼全局",
     },
     {
-      rect: { x0: 7, y0: 0, x1: 8, y1: 8 },
-      tags: ["大局观好", "果断止损", "战略定力"],
-      delta: { bigPicture: +30, riskAppetite: -10, decisiveness: +15 },
-      rationale: "放弃局部、转向外围开阔地，大局观强、懂得及时止损",
-    },
-    {
-      // 直接贴靠敌方阵地（中央偏右下）
-      rect: { x0: 5, y0: 5, x1: 6, y1: 6 },
-      tags: ["极度激进", "风险偏好高", "主动出击"],
-      delta: { riskAppetite: +35, controlDesire: +25, decisiveness: +12 },
-      rationale: "贴靠敌方阵地正面硬刚，风险偏好极高，掌控欲强",
-    },
-    {
-      // 中央上方（半推半就）
-      rect: { x0: 3, y0: 0, x1: 5, y1: 1 },
-      tags: ["审慎", "中立偏守"],
-      delta: { riskAppetite: -5, bigPicture: +10, decisiveness: +5 },
-      rationale: "选在不远不近的次线，审慎但缺乏决断",
+      // 半推半就的过渡区域
+      rect: { x0: 3, y0: 5, x1: 4, y1: 7 },
+      tags: ["犹豫观望", "中间路线"],
+      delta: { decisiveness: -8, bigPicture: +5, emotionalStability: -5 },
+      rationale: "既不甘心放弃，又不敢彻底救援，处于观望犹豫状态",
     },
   ],
-  // 第 2 关 · 贪：中央有黑白交错的肥肉
-  greed: [
+  // 第 2 关 · 布局偏好：测试安全感倾向与控制欲
+  opening: [
     {
-      // 中央肥肉（直冲 4,4）
+      // 占角 / 守角 / 爬二路：稳扎稳打拿实地
+      rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
+      tags: ["安全感强", "稳健务实", "风控意识"],
+      delta: { riskAppetite: -25, bigPicture: +10, decisiveness: +8, emotionalStability: +10 },
+      rationale: "选择角部巩固实地，优先追求确定性和安全感",
+    },
+    {
+      rect: { x0: 0, y0: 6, x1: 2, y1: 8 },
+      tags: ["安全感强", "稳健务实"],
+      delta: { riskAppetite: -25, bigPicture: +10, decisiveness: +8 },
+      rationale: "选择角部巩固实地，优先追求确定性和安全感",
+    },
+    {
+      rect: { x0: 6, y0: 0, x1: 8, y1: 2 },
+      tags: ["安全感强", "稳健务实"],
+      delta: { riskAppetite: -25, bigPicture: +10, decisiveness: +8 },
+      rationale: "选择角部巩固实地，优先追求确定性和安全感",
+    },
+    {
+      rect: { x0: 6, y0: 6, x1: 8, y1: 8 },
+      tags: ["安全感强", "稳健务实"],
+      delta: { riskAppetite: -25, bigPicture: +10, decisiveness: +8 },
+      rationale: "选择角部巩固实地，优先追求确定性和安全感",
+    },
+    {
+      // 占中腹 / 高位构筑大势
       rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
-      tags: ["贪婪", "过度自信", "FOMO"],
-      delta: { riskAppetite: +35, sunkCost: +12, controlDesire: +20 },
-      rationale: "直扑中央肥肉，贪婪与 FOMO 驱动，过度自信易踩坑",
+      tags: ["掌控欲强", "大局观", "格局宏大"],
+      delta: { controlDesire: +35, bigPicture: +25, riskAppetite: +15, innovation: +10 },
+      rationale: "选择中腹高位，追求全局掌控和宏大布局，控制欲强",
     },
     {
-      // 角部退守
-      rect: { x0: 0, y0: 0, x1: 1, y1: 1 },
-      tags: ["风控稳健", "守拙", "长期主义"],
-      delta: { riskAppetite: -25, bigPicture: +20, decisiveness: +8 },
-      rationale: "退守角部稳健布局，风控意识强，但可能错过机会",
+      // 边线中央：折中方案
+      rect: { x0: 0, y0: 3, x1: 2, y1: 5 },
+      tags: ["平衡型", "攻守兼备"],
+      delta: { bigPicture: +8, riskAppetite: -5, controlDesire: +5 },
+      rationale: "选择边线发展，兼顾安全与扩张，走中间路线",
     },
     {
-      rect: { x0: 7, y0: 7, x1: 8, y1: 8 },
-      tags: ["风控稳健", "守拙"],
-      delta: { riskAppetite: -25, bigPicture: +20 },
-      rationale: "退守角部稳健布局，风控意识强，但可能错过机会",
-    },
-    {
-      // 边线逃避
-      rect: { x0: 0, y0: 3, x1: 0, y1: 5 },
-      tags: ["保守", "逃避倾向", "机会盲区"],
-      delta: { riskAppetite: -15, bigPicture: -10, decisiveness: -8 },
-      rationale: "落子边线逃避主战场，过于保守，可能错失主机会",
-    },
-    {
-      rect: { x0: 8, y0: 3, x1: 8, y1: 5 },
-      tags: ["保守", "逃避倾向", "机会盲区"],
-      delta: { riskAppetite: -15, bigPicture: -10, decisiveness: -8 },
-      rationale: "落子边线逃避主战场，过于保守，可能错失主机会",
-    },
-    {
-      // 上方高位压制
-      rect: { x0: 3, y0: 0, x1: 5, y1: 2 },
-      tags: ["高位压制", "主动卡位"],
-      delta: { controlDesire: +18, riskAppetite: +12, bigPicture: +10 },
-      rationale: "选择高位主动卡位，掌控欲强，攻守兼备",
+      rect: { x0: 6, y0: 3, x1: 8, y1: 5 },
+      tags: ["平衡型", "攻守兼备"],
+      delta: { bigPicture: +8, riskAppetite: -5, controlDesire: +5 },
+      rationale: "选择边线发展，兼顾安全与扩张，走中间路线",
     },
   ],
-  // 第 3 关 · 局：全盘稀疏
-  overall: [
+  // 第 3 关 · 侵犯应对：测试攻击性与冲突应对模式
+  invasion: [
     {
-      rect: { x0: 2, y0: 2, x1: 2, y1: 2 },
-      tags: ["大局观", "经典格局", "厚实主义"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
-      rationale: "选择角部星位，大局观好，遵循经典格局",
+      // 强行扳 / 断：正面硬碰硬
+      rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
+      tags: ["攻击性强", "正面冲突", "不退让"],
+      delta: { riskAppetite: +30, controlDesire: +25, decisiveness: +15, cooperation: -15 },
+      rationale: "面对挑衅选择正面迎击，攻击性强，冲突应对模式偏对抗",
     },
     {
-      rect: { x0: 6, y0: 2, x1: 6, y1: 2 },
-      tags: ["大局观", "经典格局"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
-      rationale: "选择角部星位，大局观好，遵循经典格局",
+      // 退让 / 补强：稳妥后退
+      rect: { x0: 0, y0: 3, x1: 2, y1: 5 },
+      tags: ["退让型", "避免冲突", "全局安定"],
+      delta: { cooperation: +20, emotionalStability: +15, riskAppetite: -15, controlDesire: -10 },
+      rationale: "面对挑衅选择退让巩固，避免正面冲突，重视全局安定",
     },
-    {
-      rect: { x0: 2, y0: 6, x1: 2, y1: 6 },
-      tags: ["大局观", "经典格局"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
-      rationale: "选择角部星位，大局观好，遵循经典格局",
-    },
-    {
-      rect: { x0: 6, y0: 6, x1: 6, y1: 6 },
-      tags: ["大局观", "经典格局"],
-      delta: { bigPicture: +28, decisiveness: +10, riskAppetite: -8, emotionalStability: +10 },
-      rationale: "选择角部星位，大局观好，遵循经典格局",
-    },
-    {
-      rect: { x0: 4, y0: 4, x1: 4, y1: 4 },
-      tags: ["掌控欲", "全局统御", "英雄主义"],
-      delta: { controlDesire: +35, bigPicture: +15, riskAppetite: +10, innovation: +15 },
-      rationale: "直取天元，掌控欲极强，有英雄主义倾向",
-    },
-    {
-      rect: { x0: 0, y0: 4, x1: 0, y1: 4 },
-      tags: ["防御性人格", "边缘站位"],
-      delta: { riskAppetite: -12, bigPicture: -8, controlDesire: -10, patience: +8 },
-      rationale: "落子边线，防御性人格，倾向边缘站位",
-    },
-    {
-      rect: { x0: 8, y0: 4, x1: 8, y1: 4 },
-      tags: ["防御性人格", "边缘站位"],
-      delta: { riskAppetite: -12, bigPicture: -8, controlDesire: -10, patience: +8 },
-      rationale: "落子边线，防御性人格，倾向边缘站位",
-    },
-  ],
-  // 第 4 关 · 舍：弃子保全局的取舍
-  tradeoff: [
     {
       rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
-      tags: ["执念深", "不愿放手", "沉没成本"],
-      delta: { sunkCost: +40, decisiveness: -15, patience: -10, emotionalStability: -12 },
-      rationale: "明知已被包围仍试图救援，不愿接受损失，沉没成本谬误严重",
+      tags: ["退让型", "逃避倾向"],
+      delta: { cooperation: +10, riskAppetite: -20, controlDesire: -15, decisiveness: -8 },
+      rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向",
+    },
+  ],
+  // 第 4 关 · 劫争转换：测试隧道视野与多任务应变
+  ko: [
+    {
+      // 应劫 / 粘劫：继续主战场
+      rect: { x0: 5, y0: 0, x1: 8, y1: 4 },
+      tags: ["隧道视野", "执念主战场", "不服输"],
+      delta: { sunkCost: +25, controlDesire: +20, bigPicture: -15, decisiveness: -10 },
+      rationale: "紧盯主战场劫争不放，隧道视野明显，难以接受局部受损",
     },
     {
-      rect: { x0: 5, y0: 5, x1: 8, y1: 8 },
-      tags: ["果断止损", "面向未来", "战略转移"],
-      delta: { bigPicture: +35, decisiveness: +20, sunkCost: -25, emotionalStability: +18 },
-      rationale: "放弃被围棋子，转向右上方新机会，懂得止损，大局观强",
+      // 消劫 / 别处连下两手：转向侧翼
+      rect: { x0: 0, y0: 5, x1: 4, y1: 8 },
+      tags: ["灵活应变", "全局思维", "战略转移"],
+      delta: { bigPicture: +35, decisiveness: +20, innovation: +15, controlDesire: -10 },
+      rationale: "放弃主战场劫争，转而攻击侧翼，展现灵活的多任务应变能力",
     },
     {
+      // 中间观望
       rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
-      tags: ["犹豫观望", "中间路线"],
-      delta: { decisiveness: -10, bigPicture: +5, cooperation: +8 },
-      rationale: "选择中间地带观望，既不救援也不进取，决策偏保守",
-    },
-    {
-      rect: { x0: 0, y0: 5, x1: 2, y1: 8 },
-      tags: ["防御性转移", "稳健撤退"],
-      delta: { riskAppetite: -15, patience: +15, emotionalStability: +10 },
-      rationale: "向左侧安全区域转移，优先保障生存，耐心等待时机",
-    },
-    {
-      rect: { x0: 5, y0: 0, x1: 8, y1: 2 },
-      tags: ["积极开拓", "创新思维"],
-      delta: { innovation: +25, riskAppetite: +15, controlDesire: +10 },
-      rationale: "抢占上方空白区域，展现创新思维，积极开拓新领域",
+      tags: ["犹豫不决", "中间路线"],
+      delta: { decisiveness: -12, bigPicture: +5, emotionalStability: -5 },
+      rationale: "既想处理劫争又想照顾侧翼，犹豫不决，缺乏明确优先级",
     },
   ],
 };

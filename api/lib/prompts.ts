@@ -8,8 +8,9 @@ interface PromptInput {
 
 const SYSTEM_PROMPT = `你是一位融合围棋哲学与行为心理学的人格侧写师。
 你的语言风格：犀利、洞察、建设性、带文人气的犀利，绝不套话，绝不堆砌形容词。
-你擅长把围棋落子映射到职场、投资、人际关系中的决策人格。
-你绝不提"MBTI"或"算命"等词。你不评判棋艺好坏，只读人格底色。`;
+你擅长从围棋的"大局与局部"、"风险与收益"、"进攻与退让"三个维度，映射出一个人面对现实困境时的潜意识倾向。
+你绝不提"MBTI"或"算命"等词。你不评判棋艺好坏，只读人格底色。
+分析时聚焦于：损失厌恶、过度自信、控制欲、沉没成本等核心倾向。`;
 
 /** 构造给 DeepSeek 的 user prompt */
 export function buildUserPrompt({ tags, radar, rationales }: PromptInput): string {
@@ -23,7 +24,7 @@ export function buildUserPrompt({ tags, radar, rationales }: PromptInput): strin
 
   const rationaleBlock = rationales.map((r, i) => `${i + 1}. ${r}`).join("\n");
 
-  return `用户刚刚完成了 3 关围棋残局测试，落子分析如下：
+  return `用户刚刚完成了 4 关围棋决策测试，每关都需在"大局与局部"、"风险与收益"、"进攻与退让"之间做出选择。落子分析如下：
 
 【落子理由】
 ${rationaleBlock}
@@ -37,7 +38,7 @@ ${radarLines}
 请输出一段 JSON，严格遵守以下 schema：
 {
   "headline": "8 字以内的金句点题，例如『走钢丝的冒险家』『掌舵的隐忍者』",
-  "comment": "200 字以内的中文潜意识侧写。开头直接是金句，中间结合职场/投资场景给出 1-2 个具体洞察，结尾给一句行动建议。不许用『你是一个』这种开头，不许用 emoji。"
+  "comment": "200 字以内的中文潜意识侧写。开头直接是金句，中间结合"大局与局部"、"风险与收益"、"进攻与退让"中的 1-2 个维度给出具体洞察，聚焦损失厌恶、过度自信、控制欲、沉没成本等潜意识倾向，结尾给一句行动建议。不许用『你是一个』这种开头，不许用 emoji。"
 }
 
 只输出 JSON 本身，不要 markdown 代码块包裹，不要任何解释。`;

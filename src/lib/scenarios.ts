@@ -1,103 +1,113 @@
 import type { Scenario } from "@/lib/types";
 
 /**
- * 3 关残局配置
+ * 4 关残局配置
  * 9x9 棋盘，坐标原点 (0,0) 在左上角
  */
 
-// 第 1 关 · 围：黑 3 子被白 5 子包围
-const siegeStones = [
-  // 中央被围的黑子
-  { x: 4, y: 4, color: "B" as const },
-  { x: 3, y: 4, color: "B" as const },
-  { x: 4, y: 3, color: "B" as const },
+// 第 1 关 · 死活困境：测试损失厌恶与止损决策
+// 黑棋左下角 4-5 子被白棋包围，濒临死亡
+const lifeDeathStones = [
+  // 左下角被围的黑子
+  { x: 1, y: 7, color: "B" as const },
+  { x: 1, y: 6, color: "B" as const },
+  { x: 2, y: 7, color: "B" as const },
+  { x: 2, y: 6, color: "B" as const },
   // 包围的白子
-  { x: 2, y: 4, color: "W" as const },
-  { x: 5, y: 4, color: "W" as const },
-  { x: 4, y: 2, color: "W" as const },
-  { x: 4, y: 5, color: "W" as const },
+  { x: 0, y: 8, color: "W" as const },
+  { x: 1, y: 8, color: "W" as const },
+  { x: 2, y: 8, color: "W" as const },
+  { x: 3, y: 8, color: "W" as const },
+  { x: 3, y: 7, color: "W" as const },
+  { x: 3, y: 6, color: "W" as const },
   { x: 3, y: 5, color: "W" as const },
+  { x: 2, y: 5, color: "W" as const },
+  { x: 1, y: 5, color: "W" as const },
+  { x: 0, y: 5, color: "W" as const },
+  { x: 0, y: 6, color: "W" as const },
+  { x: 0, y: 7, color: "W" as const },
 ];
 
-// 第 2 关 · 贪：中央有黑白交错的肥肉
-const greedStones = [
-  // 中央肥肉周围散落的黑白
-  { x: 3, y: 3, color: "B" as const },
-  { x: 5, y: 3, color: "W" as const },
-  { x: 3, y: 5, color: "W" as const },
-  { x: 5, y: 5, color: "B" as const },
-  { x: 6, y: 4, color: "W" as const },
-  { x: 2, y: 4, color: "B" as const },
-  // 角部已有黑子（可作为退守点）
-  { x: 0, y: 0, color: "B" as const },
-  { x: 8, y: 8, color: "W" as const },
-];
-
-// 第 3 关 · 局：全盘稀疏开局
-const overallStones = [
-  { x: 2, y: 2, color: "B" as const },
-  { x: 6, y: 2, color: "W" as const },
-  { x: 2, y: 6, color: "W" as const },
-  { x: 6, y: 6, color: "B" as const },
-];
-
-// 第 4 关 · 舍：弃子保全局的取舍
-const tradeoffStones = [
-  // 左下角被围的黑子（需要舍弃）
+// 第 2 关 · 布局偏好：测试安全感倾向与控制欲
+// 开局阶段，黑棋已占一角，轮到你行棋
+const openingStones = [
   { x: 1, y: 1, color: "B" as const },
-  { x: 0, y: 1, color: "B" as const },
-  { x: 1, y: 0, color: "B" as const },
-  // 包围黑子的白子
-  { x: 0, y: 0, color: "W" as const },
-  { x: 2, y: 0, color: "W" as const },
-  { x: 2, y: 1, color: "W" as const },
-  { x: 2, y: 2, color: "W" as const },
-  { x: 0, y: 2, color: "W" as const },
-  { x: 1, y: 2, color: "W" as const },
-  // 右上大片空白区域（新机会）
-  { x: 6, y: 6, color: "B" as const },
+  { x: 1, y: 7, color: "W" as const },
   { x: 7, y: 7, color: "B" as const },
-  { x: 5, y: 7, color: "W" as const },
+];
+
+// 第 3 关 · 侵犯应对：测试攻击性与冲突应对模式
+// 黑棋在左边有稳固阵地，白棋强行刺入挑衅
+const invasionStones = [
+  // 黑棋在左边的阵地
+  { x: 1, y: 3, color: "B" as const },
+  { x: 1, y: 4, color: "B" as const },
+  { x: 1, y: 5, color: "B" as const },
+  { x: 2, y: 3, color: "B" as const },
+  { x: 2, y: 4, color: "B" as const },
+  { x: 2, y: 5, color: "B" as const },
+  // 白棋挑衅的刺入一子
+  { x: 3, y: 4, color: "W" as const },
+];
+
+// 第 4 关 · 劫争转换：测试隧道视野与多任务应变
+// 右上角在打劫，白棋找劫材，轮到你处理
+const koStones = [
+  // 右上角劫争形态
+  { x: 7, y: 1, color: "B" as const },
+  { x: 8, y: 1, color: "W" as const },
+  { x: 7, y: 2, color: "W" as const },
+  { x: 8, y: 2, color: "B" as const },
+  { x: 6, y: 2, color: "W" as const },
+  // 左下角白棋阵营
+  { x: 1, y: 6, color: "W" as const },
+  { x: 2, y: 6, color: "W" as const },
+  { x: 1, y: 7, color: "W" as const },
+  { x: 2, y: 7, color: "W" as const },
+  { x: 3, y: 6, color: "W" as const },
+  // 左下角黑棋周边子
+  { x: 0, y: 5, color: "B" as const },
+  { x: 4, y: 8, color: "B" as const },
 ];
 
 export const SCENARIOS: Scenario[] = [
   {
-    id: "siege",
+    id: "lifeDeath",
     index: 1,
     title: "困",
-    subtitle: "身陷困境",
-    prompt: "你的团队陷入了困境。作为决策者，你会选择救援被围的同伴，还是果断放弃转向新的机会？",
-    hint: "凭第一反应点击棋盘",
-    stones: siegeStones,
-    focus: { x: 4, y: 4 },
+    subtitle: "死活困境",
+    prompt: "你的先锋部队已被敌军重重包围，面临歼灭风险。你决定？",
+    hint: "A. 强行突围救回残子  B. 弃子封外，构筑厚势",
+    stones: lifeDeathStones,
+    focus: { x: 2, y: 6 },
   },
   {
-    id: "greed",
+    id: "opening",
     index: 2,
-    title: "诱",
-    subtitle: "诱惑面前",
-    prompt: "眼前有一个诱人的机会，但风险未知。你会选择把握机会，还是稳妥撤退？",
-    hint: "欲望与理智，你会倾向哪一边",
-    stones: greedStones,
-    focus: { x: 4, y: 4 },
+    title: "始",
+    subtitle: "布局偏好",
+    prompt: "面对全新的项目启动期，你更倾向于哪种开局策略？",
+    hint: "A. 稳扎稳打先拿实地  B. 布局宏大占据中央",
+    stones: openingStones,
   },
   {
-    id: "overall",
+    id: "invasion",
     index: 3,
-    title: "远",
-    subtitle: "长远布局",
-    prompt: "一切刚刚开始，胜负未定。你的直觉会把第一颗棋子放在哪里？",
-    hint: "你的选择将决定未来的格局",
-    stones: overallStones,
+    title: "侵",
+    subtitle: "侵犯应对",
+    prompt: "对方突然对你提出了不合理且带有挑衅性质的竞争要求，你的第一反应是？",
+    hint: "A. 正面迎头痛击  B. 退让一步稳住阵脚",
+    stones: invasionStones,
+    focus: { x: 3, y: 4 },
   },
   {
-    id: "tradeoff",
+    id: "ko",
     index: 4,
-    title: "舍",
-    subtitle: "取舍之间",
-    prompt: "左下角的团队已经被包围，继续救援只会损失更多。你会选择放弃沉没成本，转向右上方的新机会吗？",
-    hint: "有时候放弃，是为了更好的开始",
-    stones: tradeoffStones,
-    focus: { x: 1, y: 1 },
+    title: "劫",
+    subtitle: "劫争转换",
+    prompt: "你与竞争对手在主战场陷入了焦灼的拉锯战，此时对方在侧翼发起了骚扰，你会？",
+    hint: "A. 紧盯主战场必须打赢  B. 避其锋芒换取侧翼开花",
+    stones: koStones,
+    focus: { x: 7, y: 1 },
   },
 ];

@@ -1,7 +1,7 @@
 // 前后端共享的类型定义
 
 /** 4 关残局 ID */
-export type PuzzleId = "siege" | "greed" | "overall" | "tradeoff";
+export type PuzzleId = "lifeDeath" | "opening" | "invasion" | "ko";
 
 /** 围棋交叉点坐标（0-8） */
 export interface Coord {

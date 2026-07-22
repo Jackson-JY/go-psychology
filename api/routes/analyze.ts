@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { mapMovesToProfile } from "../lib/heatmap.js";
 import { callDeepSeek, hasDeepSeekKey } from "../lib/deepseek.js";
-import { mockComment, mockMbtiComment } from "../lib/mock.js";
+import { mockComment } from "../lib/mock.js";
 import { mapRadarToMbti } from "../lib/mbti.js";
 import { mapRadarToBigFive } from "../lib/bigFive.js";
 import { mapRadarToInvestment } from "../lib/investment.js";
@@ -75,10 +75,7 @@ router.post("/", async (req: Request, res: Response) => {
     comment = mock.comment;
   }
 
-  if (source === "mock") {
-    const mbtiComment = mockMbtiComment(mbti.type);
-    comment = `${comment}\n\n【MBTI · ${mbti.type} · ${mbti.title}】\n${mbtiComment}`;
-  }
+
 
   const response: AnalyzeResponse = {
     radar: profile.radar,

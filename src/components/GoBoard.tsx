@@ -33,7 +33,6 @@ export default function GoBoard({
 }: GoBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ripple, setRipple] = useState<{ x: number; y: number; t: number } | null>(null);
-  const [hoverPoint, setHoverPoint] = useState<Coord | null>(null);
 
   const padding = size / (BOARD_N + 1);
   const inner = size - padding * 2;
@@ -137,38 +136,8 @@ export default function GoBoard({
       ctx.setLineDash([]);
     }
 
-    if (showHint && !disabled && !userMove) {
-      for (let y = 0; y < BOARD_N; y++) {
-        for (let x = 0; x < BOARD_N; x++) {
-          const occupied = stones.some((s) => s.x === x && s.y === y);
-          if (!occupied) {
-            const { px, py } = toPx({ x, y });
-            ctx.fillStyle = "rgba(200, 57, 43, 0.08)";
-            ctx.beginPath();
-            ctx.arc(px, py, cellSize * 0.25, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-    }
-
     for (const s of stones) {
       drawStone(ctx, toPx(s), s.color, cellSize * 0.46);
-    }
-
-    if (hoverPoint && !userMove && !disabled) {
-      const { px, py } = toPx(hoverPoint);
-      ctx.save();
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = "rgba(20, 20, 20, 0.7)";
-      ctx.beginPath();
-      ctx.arc(px, py, cellSize * 0.42, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-      ctx.beginPath();
-      ctx.arc(px - cellSize * 0.15, py - cellSize * 0.15, cellSize * 0.12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
     }
 
     if (userMove) {
@@ -194,7 +163,7 @@ export default function GoBoard({
         setRipple(null);
       }
     }
-  }, [size, padding, inner, cellSize, stones, userMove, focus, highlightAreas, ripple, hoverPoint, toPx, disabled, showHint]);
+  }, [size, padding, inner, cellSize, stones, userMove, focus, highlightAreas, ripple, toPx, disabled]);
 
   useEffect(() => {
     if (!ripple) return;
@@ -206,23 +175,6 @@ export default function GoBoard({
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [ripple]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (disabled || !!userMove) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = size / rect.width;
-    const scaleY = size / rect.height;
-    const cx = (e.clientX - rect.left) * scaleX;
-    const cy = (e.clientY - rect.top) * scaleY;
-    const point = findNearestPoint(cx, cy);
-    setHoverPoint(point);
-  };
-
-  const handleMouseLeave = () => {
-    setHoverPoint(null);
-  };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (disabled) return;
@@ -256,8 +208,6 @@ export default function GoBoard({
       <canvas
         ref={canvasRef}
         onClick={handleClick}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
         style={{
           width: "100%",
           height: "100%",
