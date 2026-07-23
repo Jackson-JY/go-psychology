@@ -25,7 +25,10 @@ export default function OptionOverlays({ areas, size = 320 }: OptionOverlaysProp
   });
 
   return (
-    <div className="pointer-events-none absolute inset-0" style={{ width: size, height: size }}>
+    <div
+      className="pointer-events-none absolute left-0 top-0"
+      style={{ width: size, height: size }}
+    >
       {areas.map((area, i) => {
         const { left, top } = toPx(area.x, area.y);
         const isCinnabar = area.color === "cinnabar";

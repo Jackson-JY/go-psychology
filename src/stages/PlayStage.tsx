@@ -34,13 +34,13 @@ export default function PlayStage() {
   const optionAreas = isBeginner
     ? [
         // A 区域：红色，继续投入/攻击型选择（基于当前题目的热区）
-        { x: scenario.id === "lifeDeath" ? 5 : scenario.id === "opening" ? 1 : scenario.id === "invasion" ? 4 : 7,
-          y: scenario.id === "lifeDeath" ? 7 : scenario.id === "opening" ? 1 : scenario.id === "invasion" ? 4 : 1,
+        { x: scenario.id === "lifeDeath" ? 5 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 6,
+          y: scenario.id === "lifeDeath" ? 7 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 1,
           label: copy.optionA ?? "选择 A",
           color: "cinnabar" as const },
         // B 区域：蓝色，放弃/转移型选择
-        { x: scenario.id === "lifeDeath" ? 6 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 1 : 2,
-          y: scenario.id === "lifeDeath" ? 3 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 3 : 6,
+        { x: scenario.id === "lifeDeath" ? 6 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 0 : 5,
+          y: scenario.id === "lifeDeath" ? 3 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 4 : 7,
           label: copy.optionB ?? "选择 B",
           color: "bamboo" as const },
       ]
