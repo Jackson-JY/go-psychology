@@ -36,9 +36,13 @@ export interface RadarData {
   patience: number; // 耐心程度
 }
 
+/** 用户围棋经验水平 */
+export type ExperienceLevel = "beginner" | "skilled";
+
 /** /api/analyze 请求体 */
 export interface AnalyzeRequest {
   moves: MoveRecord[];
+  experienceLevel?: ExperienceLevel;
 }
 
 /** MBTI 结果 */
@@ -116,14 +120,23 @@ export interface AnalyzeResponse {
   deepReport: DeepReport;
 }
 
-/** 单关残局配置 */
-export interface Scenario {
-  id: PuzzleId;
-  index: number; // 1-3
+/** 单关残局文案配置 */
+export interface ScenarioCopy {
   title: string; // 「围」
   subtitle: string; // 「团队被围」
   prompt: string; // 情境文案
   hint: string; // 落子提示
+  /** A/B 选项在棋盘上的标签，仅用于零基础模式 */
+  optionA?: string;
+  optionB?: string;
+}
+
+/** 单关残局配置 */
+export interface Scenario {
+  id: PuzzleId;
+  index: number; // 1-4
+  /** 两套文案：beginner=零基础，skilled=入门用户 */
+  copy: Record<"beginner" | "skilled", ScenarioCopy>;
   /** 棋盘 9x9 的预设残局（黑=B，白=W） */
   stones: PlacedStone[];
   /** 棋盘最关键的视觉中心点（用于 highlight） */

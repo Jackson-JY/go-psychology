@@ -1,9 +1,10 @@
-import type { RadarData } from "@shared/types";
+import type { ExperienceLevel, RadarData } from "@shared/types";
 
 interface MockInput {
   tags: string[];
   radar: RadarData;
   rationales: string[];
+  experienceLevel?: ExperienceLevel;
 }
 
 interface MockOutput {
@@ -279,6 +280,115 @@ const POOLS: Record<string, { headline: string; comment: string }[]> = {
   ],
 };
 
+/** 零基础版本话术池（更生活化、少围棋术语） */
+const BEGINNER_POOLS: Record<string, { headline: string; comment: string }[]> = {
+  aggressive: [
+    {
+      headline: "走钢丝的冒险家",
+      comment:
+        "你是那种敢在悬崖边跳舞的人。四道题里，你都选了最激进、最靠近冲突的落点。面对不确定的事，你习惯先冲出去再说，相信『试了才有机会』。这种勇气很珍贵，但冒险之前，先问问自己：『如果这一步错了，我能承受吗？』把冲动和勇气分开，你会更稳。",
+    },
+    {
+      headline: "刀尖上的舞者",
+      comment:
+        "你天生喜欢紧贴着风险走。哪怕局势不明朗，你也愿意先出手，享受那种『差一点就赢了』的刺激。生活中，你可能是那个最先举手、最先表态的人。提醒你：刀尖很美，但也容易割伤自己。下一次做重要决定前，先给自己三秒，看看有没有更安全的落点。",
+    },
+  ],
+  stubborn: [
+    {
+      headline: "执念的守望者",
+      comment:
+        "你很难对已投入的东西说放手。即使局势已经很糟糕，你还是想再救一下、再撑一下。这源自你对自己的选择很认真，但认真不等于正确。真正的成熟，是懂得在合适的时候转身。放手不是认输，而是把资源留给更值得的事。",
+    },
+    {
+      headline: "舍不得的守陵人",
+      comment:
+        "你容易陷在『已经付出太多』的情绪里，哪怕继续投入只会越亏越多。你重感情、念旧，这是你的温柔，也是你的枷锁。学会止损，不是冷漠，而是保护自己。下次当你想『再坚持一下』时，先算一算：继续走下去，是更接近目标，还是更接近深渊？",
+    },
+  ],
+  strategic: [
+    {
+      headline: "掌舵的隐忍者",
+      comment:
+        "你擅长看大局，不会被眼前的小得失牵着走。即使局部吃亏，你也能退后一步，想明白真正重要的是什么。这种『舍小取大』的能力，在职场和人际关系中都很珍贵。但要小心：太理性的人，有时会忽略当下的感受。偶尔允许自己为眼前的小确幸开心一下。",
+    },
+    {
+      headline: "棋盘外的棋手",
+      comment:
+        "别人还在纠结这一步怎么下，你已经在想三步之后的事。你习惯站在更高处看问题，不被一时的输赢影响。生活中，你是那个能稳住局面的人。但也要注意：站得太高，可能看不清脚下的坑。关键时刻，低下头，看看身边人的真实状态。",
+    },
+  ],
+  controller: [
+    {
+      headline: "全局统御的帝王",
+      comment:
+        "你喜欢掌控感。局面越混乱，你越想要抓住主导权。你习惯主动布局，让事情按你的节奏走。这种领导力很强大，但如果身边的人总觉得被指挥，反而会疏远你。真正的掌控，不是让所有事都听你，而是让每个人都愿意跟你一起往前走。",
+    },
+    {
+      headline: "中军帐里的指挥官",
+      comment:
+        "你天然想站在中央，掌控全局变量。你善于统筹，也敢于拍板。但『什么都想管』可能会让你很累，也让团队失去成长空间。试着把一些事情交给别人，你会发现：放手之后，局面反而更开阔。",
+    },
+  ],
+  stable: [
+    {
+      headline: "不动如山的磐石",
+      comment:
+        "无论局面怎么变，你都能保持冷静。你不会被一时的情绪带着跑，做决定时更相信自己的判断。这种稳定性是非常稀缺的品质。但有时候，『太稳』也意味着『太慢』。当机会出现时，允许自己快一点，你的冷静会是最强的武器。",
+    },
+    {
+      headline: "深海里的潜水员",
+      comment:
+        "你在压力下反而更清醒。别人慌张的时候，你能沉住气，找到问题的关键。你不张扬，但内心很有力量。建议你：适当让别人看到你的深度。沉默是力量，但适度的表达，能让更多人信任你、靠近你。",
+    },
+  ],
+  cooperative: [
+    {
+      headline: "以和为贵的调停者",
+      comment:
+        "你不喜欢硬碰硬，更倾向找到让大家都能接受的方案。面对冲突时，你会先想：『有没有双赢的可能？』这种协调能力很珍贵。但也要注意：如果总是为了和谐而让步，你的立场会慢慢模糊。该坚持的时候，请坚定地说出自己的需求。",
+    },
+    {
+      headline: "润物无声的合作者",
+      comment:
+        "你不抢风头，却总能在关键时刻补位。你善于配合别人，让团队整体更好。但你的付出有时会被忽略，因为你太安静了。记住：你的价值不需要靠嗓门证明，但你需要让别人知道——这件事，有你很重要。",
+    },
+  ],
+  innovative: [
+    {
+      headline: "跳出棋盘的造局者",
+      comment:
+        "你不满足于常规选项，总喜欢找第三条路。别人还在二选一时，你已经在想『能不能换个玩法』。这种创新思维很厉害，但也要防止想法太多、落地太少。选一个最让你兴奋的方向，先做出第一步，比空想一百个方案更有力量。",
+    },
+  ],
+  patient: [
+    {
+      headline: "静待花开的守望者",
+      comment:
+        "你愿意为长远目标等待，不急于求成。你相信时间的力量，也耐得住寂寞。这种耐心在浮躁的环境里尤其难得。但机会有时稍纵即逝，过于等待可能让你错过窗口。给自己设定一个『行动Deadline』，该出手时就出手。",
+    },
+  ],
+  decisive: [
+    {
+      headline: "快刀斩乱麻的决策者",
+      comment:
+        "你不纠结，看准了就做。面对选择时，你能快速砍掉干扰项，直接落子。这种决断力在快节奏环境里很吃香。但快决策也有风险——有时会忽略隐藏的信息。重大决定前，给自己一次『回头看』的机会，区分清楚是直觉，还是冲动。",
+    },
+  ],
+  defensible: [
+    {
+      headline: "守拙的潜行者",
+      comment:
+        "你习惯先保护好自己，再考虑进攻。面对不确定的局面，你会选择更稳妥的路线。这种自我保护意识让你少走弯路，但也可能让你错过成长的机会。人生有时需要一点『冒失地勇敢』，在可控范围内，试着往前多走半步。",
+    },
+    {
+      headline: "低调的旁观者",
+      comment:
+        "你不喜欢冒头，习惯先观察再行动。你不会轻易表态，也不愿卷入纷争。这让你显得沉稳可靠，但也可能让你失去主动权。找到那件你真正在乎的事，在它面前，勇敢站出来一次。",
+    },
+  ],
+};
+
 /** 根据雷达数据挑选最合适的话术池 */
 function pickPoolKey(radar: RadarData, tags: string[]): string {
   if (tags.includes("极度激进") || radar.riskAppetite >= 70) return "aggressive";
@@ -297,9 +407,10 @@ function pickPoolKey(radar: RadarData, tags: string[]): string {
 
 /** 兜底 mock：从话术池中按标签 hash 挑一条 */
 export function mockComment(input: MockInput): MockOutput {
-  const { radar, tags, rationales } = input;
+  const { radar, tags, rationales, experienceLevel } = input;
   const poolKey = pickPoolKey(radar, tags);
-  const pool = POOLS[poolKey];
+  const pools = experienceLevel === "beginner" ? BEGINNER_POOLS : POOLS;
+  const pool = pools[poolKey] ?? POOLS[poolKey];
   // 用 rationales 的字符长度做 hash 选条目，保证同输入同输出
   const seed = rationales.join("").length + tags.length;
   const pick = pool[seed % pool.length];

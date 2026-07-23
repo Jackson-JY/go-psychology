@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "check": "tsc --noEmit",
+    "test": "tsx --test api/test/analyze.test.ts",
     "server:dev": "nodemon",
     "server:prod": "tsx api/server.ts",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\"",

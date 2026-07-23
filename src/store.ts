@@ -3,16 +3,18 @@ import type { AnalyzeResponse, MoveRecord, PuzzleId } from "@/lib/types";
 import { SCENARIOS } from "@/lib/scenarios";
 
 export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster";
+export type ExperienceLevel = "beginner" | "skilled";
 
 interface GameState {
   stage: Stage;
+  experienceLevel: ExperienceLevel | null;
   currentScenarioIndex: number; // 0-2
   moves: MoveRecord[];
   scenarioStartTime: number;
   result: AnalyzeResponse | null;
   error: string | null;
 
-  start: () => void;
+  start: (level: ExperienceLevel) => void;
   startPlay: () => void;
   recordMove: (puzzleId: PuzzleId, x: number, y: number) => void;
   nextScenario: () => void;
@@ -24,15 +26,17 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set, get) => ({
   stage: "intro",
+  experienceLevel: null,
   currentScenarioIndex: 0,
   moves: [],
   scenarioStartTime: 0,
   result: null,
   error: null,
 
-  start: () => {
+  start: (level) => {
     set({
-      stage: "tutorial",
+      stage: level === "skilled" ? "play" : "tutorial",
+      experienceLevel: level,
       currentScenarioIndex: 0,
       moves: [],
       scenarioStartTime: Date.now(),

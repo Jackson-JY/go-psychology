@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import GoBoard from "@/components/GoBoard";
 import CharStream from "@/components/CharStream";
 import Seal from "@/components/Seal";
+import OptionOverlays from "@/components/OptionOverlays";
 import { SCENARIOS, useGameStore } from "@/store";
 import { analyzeMoves } from "@/lib/api";
 import type { Coord } from "@/lib/types";
@@ -16,13 +17,34 @@ export default function PlayStage() {
     nextScenario,
     setResult,
     setError,
+    experienceLevel,
   } = useGameStore();
 
   const scenario = SCENARIOS[currentScenarioIndex];
+  const effectiveLevel = experienceLevel ?? "beginner";
+  const copy = scenario.copy[effectiveLevel];
+  const isBeginner = effectiveLevel === "beginner";
+
   const [userMove, setUserMove] = useState<Coord | null>(null);
   const [phase, setPhase] = useState<"play" | "placed">("play");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMoveRef = useRef<Coord | null>(null);
+
+  // 零基础模式下 A/B 选项的视觉区域提示
+  const optionAreas = isBeginner
+    ? [
+        // A 区域：红色，继续投入/攻击型选择（基于当前题目的热区）
+        { x: scenario.id === "lifeDeath" ? 5 : scenario.id === "opening" ? 1 : scenario.id === "invasion" ? 4 : 7,
+          y: scenario.id === "lifeDeath" ? 7 : scenario.id === "opening" ? 1 : scenario.id === "invasion" ? 4 : 1,
+          label: copy.optionA ?? "选择 A",
+          color: "cinnabar" as const },
+        // B 区域：蓝色，放弃/转移型选择
+        { x: scenario.id === "lifeDeath" ? 6 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 1 : 2,
+          y: scenario.id === "lifeDeath" ? 3 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 3 : 6,
+          label: copy.optionB ?? "选择 B",
+          color: "bamboo" as const },
+      ]
+    : [];
 
   // 切关时重置
   useEffect(() => {
@@ -53,7 +75,7 @@ export default function PlayStage() {
       useGameStore.setState({ stage: "loading" });
       try {
         const finalMoves = useGameStore.getState().moves;
-        const res = await analyzeMoves(finalMoves);
+        const res = await analyzeMoves(finalMoves, experienceLevel ?? undefined);
         setResult(res);
       } catch (err) {
         setError((err as Error).message || "分析失败，请重试");
@@ -78,13 +100,13 @@ export default function PlayStage() {
       {/* 顶部：进度 + 关卡 */}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Seal char={scenario.title} size={32} />
+          <Seal char={copy.title} size={32} />
           <div className="leading-tight">
             <div className="font-mono text-[10px] tracking-widest text-ink-900/50">
               QUESTION 0{scenario.index} / 0{SCENARIOS.length}
             </div>
             <div className="font-serif text-sm font-semibold text-ink-900">
-              第 {["一", "二", "三", "四"][scenario.index - 1]} 题 · {scenario.subtitle}
+              第 {["一", "二", "三", "四"][scenario.index - 1]} 题 · {copy.subtitle}
             </div>
           </div>
         </div>
@@ -122,10 +144,10 @@ export default function PlayStage() {
           SCENE
         </div>
         <p className="mx-auto mt-2 max-w-[16em] font-kai text-lg leading-relaxed text-ink-900">
-          <CharStream text={scenario.prompt} step={45} />
+          <CharStream text={copy.prompt} step={45} />
         </p>
         <p className="mt-2 font-mono text-[10px] tracking-widest text-cinnabar/70">
-          {scenario.hint}
+          {copy.hint}
         </p>
       </motion.section>
 
@@ -135,6 +157,7 @@ export default function PlayStage() {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative"
         >
           <GoBoard
             stones={scenario.stones}
@@ -144,6 +167,10 @@ export default function PlayStage() {
             disabled={phase !== "play"}
             size={320}
           />
+          {/* 零基础 A/B 选项浮层 */}
+          {isBeginner && phase === "play" && (
+            <OptionOverlays areas={optionAreas} />
+          )}
         </motion.div>
       </div>
 

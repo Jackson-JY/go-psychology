@@ -14,6 +14,7 @@ interface PromptInput {
   tags: string[];
   radar: RadarData;
   rationales: string[];
+  experienceLevel?: "beginner" | "skilled";
 }
 
 /** 是否配置了 DeepSeek key */

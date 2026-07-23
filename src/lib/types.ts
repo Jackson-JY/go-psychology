@@ -4,6 +4,7 @@ export type {
   MoveRecord,
   RadarData,
   Scenario,
+  ScenarioCopy,
   PuzzleId,
   Coord,
   PlacedStone,

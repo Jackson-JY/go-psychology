@@ -32,25 +32,25 @@ const HEATMAP: Record<PuzzleId, HeatZone[]> = {
   // 第 1 关 · 死活困境：测试损失厌恶与止损决策
   lifeDeath: [
     {
-      // 强行突围：在死子附近继续投入
-      rect: { x0: 0, y0: 5, x1: 3, y1: 8 },
+      // 继续爬二路：在二路(y=7)或一路(y=8)继续投入，试图让黑子突围
+      rect: { x0: 4, y0: 6, x1: 8, y1: 8 },
       tags: ["执念深", "沉没成本谬误", "损失厌恶"],
       delta: { sunkCost: +40, decisiveness: -12, bigPicture: -10, emotionalStability: -10 },
-      rationale: "被围残子已无生路，仍强行突围救援，损失厌恶显著，难以止损",
+      rationale: "二路黑子已被白棋三路厚壁压制，仍继续爬二路试图突围，不愿放弃已有投入，损失厌恶显著",
     },
     {
-      // 弃子封外：在右上方或外围构筑厚势
-      rect: { x0: 4, y0: 0, x1: 8, y1: 5 },
+      // 弃子封外：在中腹/边路落子，放弃底部黑子，开辟新战场
+      rect: { x0: 3, y0: 0, x1: 8, y1: 5 },
       tags: ["果断止损", "大局观好", "战略定力"],
       delta: { bigPicture: +35, decisiveness: +18, sunkCost: -25, emotionalStability: +15 },
-      rationale: "放弃濒死残子，转而在外围构筑厚势，懂得止损、放眼全局",
+      rationale: "放弃二路被压制的黑子，转而在中腹或边路开辟新战场，懂得止损、放眼全局",
     },
     {
-      // 半推半就的过渡区域
-      rect: { x0: 3, y0: 5, x1: 4, y1: 7 },
+      // 中间过渡区域
+      rect: { x0: 1, y0: 4, x1: 4, y1: 5 },
       tags: ["犹豫观望", "中间路线"],
       delta: { decisiveness: -8, bigPicture: +5, emotionalStability: -5 },
-      rationale: "既不甘心放弃，又不敢彻底救援，处于观望犹豫状态",
+      rationale: "既不甘心放弃二路黑子，又不敢彻底投入突围，处于观望犹豫状态",
     },
   ],
   // 第 2 关 · 布局偏好：测试安全感倾向与控制欲
@@ -187,7 +187,10 @@ export interface AnalyzeInternal {
   rationales: string[]; // 每关落子理由，用于 prompt
 }
 
-export function mapMovesToProfile(moves: MoveRecord[]): AnalyzeInternal {
+export function mapMovesToProfile(
+  moves: MoveRecord[],
+  _experienceLevel?: "beginner" | "skilled",
+): AnalyzeInternal {
   const radar: RadarData = { ...BASE_RADAR };
   const tagSet = new Set<string>();
   const rationales: string[] = [];

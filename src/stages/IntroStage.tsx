@@ -1,10 +1,14 @@
 import { motion } from "framer-motion";
 import InkParticles from "@/components/InkParticles";
 import Seal from "@/components/Seal";
-import { useGameStore } from "@/store";
+import { useGameStore, type ExperienceLevel } from "@/store";
 
 export default function IntroStage() {
   const start = useGameStore((s) => s.start);
+
+  const handleStart = (level: ExperienceLevel) => {
+    start(level);
+  };
 
   return (
     <div className="relative flex h-[100dvh] min-h-[560px] flex-col items-center overflow-hidden bg-paper-100 px-6 py-10">
@@ -68,15 +72,28 @@ export default function IntroStage() {
           </motion.p>
         </div>
 
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.5, duration: 0.6 }}
-          onClick={start}
-          className="btn-ink"
+          className="flex flex-col gap-3"
         >
-          开始觉察 →
-        </motion.button>
+          <p className="mb-2 font-mono text-[10px] tracking-widest text-ink-900/50">
+            你的围棋水平？
+          </p>
+          <button
+            onClick={() => handleStart("beginner")}
+            className="btn-ink !px-6 !py-3 text-sm"
+          >
+            从未下过围棋 →
+          </button>
+          <button
+            onClick={() => handleStart("skilled")}
+            className="rounded-sm border border-ink-900/20 bg-paper-100 px-6 py-3 font-kai text-sm text-ink-900 transition-colors hover:bg-ink-900 hover:text-paper-100"
+          >
+            了解围棋基本规则 →
+          </button>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -84,7 +101,7 @@ export default function IntroStage() {
           transition={{ delay: 2.0, duration: 0.6 }}
           className="mt-8 flex flex-col items-center gap-1 font-mono text-[10px] tracking-widest text-ink-900/40"
         >
-          <span>3 关残局 · 1 分钟 · 即玩即测</span>
+          <span>4 关残局 · 1 分钟 · 即玩即测</span>
           <span className="text-cinnabar/60">凭第一直觉落子</span>
         </motion.div>
       </main>

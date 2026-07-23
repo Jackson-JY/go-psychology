@@ -34,7 +34,7 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
-  const { moves } = req.body as AnalyzeRequest;
+  const { moves, experienceLevel } = req.body as AnalyzeRequest;
   if (!Array.isArray(moves) || moves.length === 0) {
     res.status(400).json({ error: "缺少 moves 数据" });
     return;
@@ -44,14 +44,14 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
-  const profile = mapMovesToProfile(moves);
+  const profile = mapMovesToProfile(moves, experienceLevel);
 
   const mbti = mapRadarToMbti(profile.radar);
   const bigFive = mapRadarToBigFive(profile.radar);
   const investment = mapRadarToInvestment(profile.radar);
   const career = mapRadarToCareer(profile.radar);
   const heatmap = generateHeatmap(moves);
-  const deepReport = generateDeepReport(profile.radar);
+  const deepReport = generateDeepReport(profile.radar, experienceLevel);
 
   let source: "deepseek" | "mock" = "mock";
   let headline: string;
@@ -59,18 +59,18 @@ router.post("/", async (req: Request, res: Response) => {
 
   if (hasDeepSeekKey()) {
     try {
-      const ai = await callDeepSeek(profile);
+      const ai = await callDeepSeek({ ...profile, experienceLevel });
       headline = ai.headline;
       comment = ai.comment;
       source = "deepseek";
     } catch (err) {
       console.error("[analyze] DeepSeek 失败，降级 mock:", (err as Error).message);
-      const mock = mockComment(profile);
+      const mock = mockComment({ ...profile, experienceLevel });
       headline = mock.headline;
       comment = mock.comment;
     }
   } else {
-    const mock = mockComment(profile);
+    const mock = mockComment({ ...profile, experienceLevel });
     headline = mock.headline;
     comment = mock.comment;
   }

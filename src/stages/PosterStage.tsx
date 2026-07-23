@@ -6,7 +6,7 @@ import { useGameStore, SCENARIOS } from "@/store";
 import type { MoveRecord } from "@/lib/types";
 
 export default function PosterStage() {
-  const { result, moves, restart } = useGameStore();
+  const { result, moves, restart, experienceLevel } = useGameStore();
   const posterRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"idle" | "generating" | "done">("idle");
   const [imgUrl, setImgUrl] = useState<string>("");
@@ -15,8 +15,8 @@ export default function PosterStage() {
     return null;
   }
 
-  // 把 3 关的落子在海报上小图重绘（SVG）
-  const miniBoards = moves.length === 3 ? moves : [];
+  // 把 4 关的落子在海报上小图重绘（SVG）
+  const miniBoards = moves.length === 4 ? moves : [];
 
   const handleGenerate = async () => {
     if (!posterRef.current) return;
@@ -106,11 +106,20 @@ export default function PosterStage() {
             <div className="mx-auto mt-2 h-px w-10 bg-ink-900/30" />
           </div>
 
-          {/* 3 个迷你棋盘 */}
-          <div className="mt-5 grid grid-cols-3 gap-2">
-            {miniBoards.map((m: MoveRecord, i: number) => (
-              <MiniBoard key={i} move={m} scenario={SCENARIOS[i]} />
-            ))}
+          {/* 4 个迷你棋盘 */}
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            {miniBoards.map((m: MoveRecord, i: number) => {
+              const scenario = SCENARIOS[i];
+              const copy = scenario.copy[experienceLevel ?? "skilled"];
+              return (
+                <MiniBoard
+                  key={i}
+                  move={m}
+                  scenario={scenario}
+                  title={copy.title}
+                />
+              );
+            })}
           </div>
 
           {/* 评语 */}
@@ -219,9 +228,11 @@ export default function PosterStage() {
 function MiniBoard({
   move,
   scenario,
+  title,
 }: {
   move: MoveRecord;
   scenario: (typeof SCENARIOS)[number];
+  title: string;
 }) {
   const N = 9;
   const size = 80;
@@ -236,7 +247,7 @@ function MiniBoard({
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="font-mono text-[8px] tracking-widest text-ink-900/50">
-        {scenario.title}
+        {title}
       </div>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <rect

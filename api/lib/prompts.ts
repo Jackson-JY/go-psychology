@@ -4,6 +4,7 @@ interface PromptInput {
   tags: string[];
   radar: RadarData;
   rationales: string[];
+  experienceLevel?: "beginner" | "skilled";
 }
 
 const SYSTEM_PROMPT = `你是一位融合围棋哲学与行为心理学的人格侧写师。
@@ -13,7 +14,7 @@ const SYSTEM_PROMPT = `你是一位融合围棋哲学与行为心理学的人格
 分析时聚焦于：损失厌恶、过度自信、控制欲、沉没成本等核心倾向。`;
 
 /** 构造给 DeepSeek 的 user prompt */
-export function buildUserPrompt({ tags, radar, rationales }: PromptInput): string {
+export function buildUserPrompt({ tags, radar, rationales, experienceLevel }: PromptInput): string {
   const radarLines = [
     `沉没成本谬误：${radar.sunkCost}`,
     `风险偏好：${radar.riskAppetite}`,
@@ -24,7 +25,11 @@ export function buildUserPrompt({ tags, radar, rationales }: PromptInput): strin
 
   const rationaleBlock = rationales.map((r, i) => `${i + 1}. ${r}`).join("\n");
 
-  return `用户刚刚完成了 4 关围棋决策测试，每关都需在"大局与局部"、"风险与收益"、"进攻与退让"之间做出选择。落子分析如下：
+  const levelHint = experienceLevel === "beginner"
+    ? "该用户是零基础围棋用户，测试时用生活化场景理解题目。请用更生活化、易懂的语言输出，少用围棋专业术语，多使用日常比喻。"
+    : "该用户了解围棋基本规则，可以用围棋思维和术语进行表达。";
+
+  return `用户刚刚完成了 4 关围棋决策测试，每关都需在"大局与局部"、"风险与收益"、"进攻与退让"之间做出选择。${levelHint}
 
 【落子理由】
 ${rationaleBlock}
