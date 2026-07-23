@@ -1,0 +1,48 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host [lindex $argv 0]
+set password [lindex $argv 1]
+
+# 1. 上传代码压缩包
+spawn scp -o StrictHostKeyChecking=no /tmp/go-psychology.tar.gz root@$host:/tmp/go-psychology.tar.gz
+expect {
+  "password:" {
+    send "$password\r"
+    exp_continue
+  }
+  eof {}
+}
+
+# 2. SSH 解压并部署
+spawn ssh -o StrictHostKeyChecking=no root@$host
+expect {
+  "password:" {
+    send "$password\r"
+    exp_continue
+  }
+  "# " {}
+}
+
+send "rm -rf /var/www/go-psychology && mkdir -p /var/www/go-psychology\r"
+expect "# "
+
+send "tar -xzf /tmp/go-psychology.tar.gz -C /var/www/go-psychology\r"
+expect "# "
+
+send "cd /var/www/go-psychology && npm install\r"
+expect "# "
+
+send "npm run build\r"
+expect "# "
+
+send "pm2 delete go-psychology-api 2>/dev/null; pm2 start ecosystem.config.cjs; pm2 save\r"
+expect "# "
+
+send "cp deploy/nginx.conf /etc/nginx/sites-available/go-psychology && nginx -t && systemctl reload nginx\r"
+expect "# "
+
+send "echo 'SCP DEPLOY DONE'\r"
+expect "# "
+
+send "exit\r"
+expect eof
