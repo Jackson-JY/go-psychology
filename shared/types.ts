@@ -120,6 +120,36 @@ export interface AnalyzeResponse {
   deepReport: DeepReport;
 }
 
+/** /api/analyze-sgf 响应体 */
+export interface SgfAnalysisResponse {
+  radar: {
+    riskAppetite: number;
+    resilience: number;
+    rationality: number;
+    conflictResponse: number;
+    focus: number;
+  };
+  tags: string[];
+  keyMoments: {
+    moveNumber: number;
+    color: "B" | "W";
+    x: number;
+    y: number;
+    type: string;
+    description: string;
+  }[];
+  moveCount: number;
+  boardSize: number;
+  heatmap: HeatmapData;
+  analyzedColor: "B" | "W";
+  /** 图片分析时的额外备注 */
+  imageNotes?: string;
+  /** 数据来源：vision=视觉识别, mock=模拟数据, sgf=直接上传 */
+  source?: "vision" | "mock" | "sgf";
+  /** 图片是否识别出原始手数 */
+  hasMoveNumbers?: boolean;
+}
+
 /** 单关残局文案配置 */
 export interface ScenarioCopy {
   title: string; // 「围」

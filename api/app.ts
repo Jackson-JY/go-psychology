@@ -12,6 +12,8 @@ import path from 'path'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import analyzeRoutes from './routes/analyze.js'
+import analyzeSgfRoutes from './routes/analyze-sgf.js'
+import analyzeImageRoutes from './routes/analyze-image.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -23,13 +25,15 @@ dotenv.config()
 const app: express.Application = express()
 
 app.use(cors())
-app.use(express.json({ limit: '2mb' }))
-app.use(express.urlencoded({ extended: true, limit: '2mb' }))
+app.use(express.json({ limit: '5mb' }))
+app.use(express.urlencoded({ extended: true, limit: '5mb' }))
 
 /**
  * API Routes
  */
 app.use('/api/analyze', analyzeRoutes)
+app.use('/api/analyze-sgf', analyzeSgfRoutes)
+app.use('/api/analyze-image', analyzeImageRoutes)
 
 /**
  * health

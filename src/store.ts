@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import type { AnalyzeResponse, MoveRecord, PuzzleId } from "@/lib/types";
+import type { AnalyzeResponse, MoveRecord, PuzzleId, SgfAnalysisResponse } from "@/lib/types";
 import { SCENARIOS } from "@/lib/scenarios";
 
-export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster";
+export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster" | "sgf-upload" | "sgf-loading" | "sgf-result";
 export type ExperienceLevel = "beginner" | "skilled";
 
 interface GameState {
@@ -12,6 +12,7 @@ interface GameState {
   moves: MoveRecord[];
   scenarioStartTime: number;
   result: AnalyzeResponse | null;
+  sgfResult: SgfAnalysisResponse | null;
   error: string | null;
 
   start: (level: ExperienceLevel) => void;
@@ -19,9 +20,11 @@ interface GameState {
   recordMove: (puzzleId: PuzzleId, x: number, y: number) => void;
   nextScenario: () => void;
   setResult: (result: AnalyzeResponse) => void;
+  setSgfResult: (result: SgfAnalysisResponse) => void;
   setError: (error: string | null) => void;
   goPoster: () => void;
   restart: () => void;
+  goSgfUpload: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -31,6 +34,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   moves: [],
   scenarioStartTime: 0,
   result: null,
+  sgfResult: null,
   error: null,
 
   start: (level) => {
@@ -78,8 +82,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setResult: (result) => set({ stage: "result", result }),
+  setSgfResult: (sgfResult) => set({ stage: "sgf-result", sgfResult }),
   setError: (error) => set({ error, stage: "result" }),
   goPoster: () => set({ stage: "poster" }),
+  goSgfUpload: () => set({ stage: "sgf-upload", sgfResult: null, error: null }),
   restart: () =>
     set({
       stage: "intro",
@@ -87,6 +93,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       moves: [],
       scenarioStartTime: 0,
       result: null,
+      sgfResult: null,
       error: null,
     }),
 }));

@@ -1,6 +1,7 @@
 export type {
   AnalyzeRequest,
   AnalyzeResponse,
+  SgfAnalysisResponse,
   MoveRecord,
   RadarData,
   Scenario,

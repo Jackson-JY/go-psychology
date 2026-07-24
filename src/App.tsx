@@ -6,6 +6,8 @@ import PlayStage from "@/stages/PlayStage";
 import LoadingStage from "@/stages/LoadingStage";
 import ResultStage from "@/stages/ResultStage";
 import PosterStage from "@/stages/PosterStage";
+import SgfUploadStage from "@/stages/SgfUploadStage";
+import SgfResultStage from "@/stages/SgfResultStage";
 import { useGameStore } from "@/store";
 
 export default function App() {
@@ -32,6 +34,8 @@ export default function App() {
           {stage === "loading" && <LoadingStage />}
           {stage === "result" && <ResultStage />}
           {stage === "poster" && <PosterStage />}
+          {stage === "sgf-upload" && <SgfUploadStage />}
+          {stage === "sgf-result" && <SgfResultStage />}
         </motion.div>
       </AnimatePresence>
     </div>

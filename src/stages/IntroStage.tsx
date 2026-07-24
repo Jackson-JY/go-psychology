@@ -10,6 +10,8 @@ export default function IntroStage() {
     start(level);
   };
 
+  const goSgfUpload = useGameStore((s) => s.goSgfUpload);
+
   return (
     <div className="relative flex h-[100dvh] min-h-[560px] flex-col items-center overflow-hidden bg-paper-100 px-6 py-10">
       <InkParticles />
@@ -92,6 +94,14 @@ export default function IntroStage() {
             className="rounded-sm border border-ink-900/20 bg-paper-100 px-6 py-3 font-kai text-sm text-ink-900 transition-colors hover:bg-ink-900 hover:text-paper-100"
           >
             了解围棋基本规则 →
+          </button>
+          <div className="my-1 h-px w-full bg-ink-900/10" />
+          <button
+            onClick={goSgfUpload}
+            className="flex items-center justify-center gap-2 rounded-sm border border-cinnabar/20 bg-cinnabar/5 px-6 py-3 font-kai text-sm text-cinnabar transition-colors hover:bg-cinnabar hover:text-white"
+          >
+            <span className="font-mono text-[10px]">SGF</span>
+            上传棋谱深度分析 →
           </button>
         </motion.div>
 
