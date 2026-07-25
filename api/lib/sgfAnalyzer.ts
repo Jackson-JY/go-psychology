@@ -131,6 +131,7 @@ function analyzeRisk(
   moves: SgfMove[],
   boardSize: number,
   territory: ("B" | "W" | null)[][],
+  analyzedColor: "B" | "W",
 ): { score: number; moments: KeyMoment[] } {
   let aggressiveScore = 0;
   let conservativeScore = 0;
@@ -143,6 +144,13 @@ function analyzeRisk(
 
   for (let i = 0; i < moves.length; i++) {
     const m = moves[i];
+
+    // 始终更新棋盘（双方落子共同构成局面）
+    board[m.y][m.x] = m.color;
+
+    // 只统计被分析方的落子
+    if (m.color !== analyzedColor) continue;
+
     const cd = centerDistance(m, boardSize);
     const ed = edgeDistance(m, boardSize);
     const cod = cornerDistance(m, boardSize);
@@ -188,7 +196,6 @@ function analyzeRisk(
     }
 
     // 切断检测：落子后是否将对方两块棋分开
-    // 简化：落子紧邻对方棋子，且该位置是对方棋子的唯一连接点
     const neighbors = [
       { x: m.x + 1, y: m.y },
       { x: m.x - 1, y: m.y },
@@ -200,8 +207,6 @@ function analyzeRisk(
     if (oppNeighbors.length >= 2) {
       aggressiveScore += 2.5;
     }
-
-    board[m.y][m.x] = m.color;
   }
 
   const total = aggressiveScore + conservativeScore;
@@ -216,12 +221,14 @@ function analyzeRisk(
  * 分析棋局后期是否仍保持战略一致性
  * 简化：后半盘落子是否仍集中在有战略价值的区域
  */
-function analyzeResilience(moves: SgfMove[], boardSize: number): number {
-  if (moves.length < 30) return 50; // 棋谱太短，返回中性值
+function analyzeResilience(moves: SgfMove[], boardSize: number, analyzedColor: "B" | "W"): number {
+  // 提取被分析方的落子
+  const myMoves = moves.filter((m) => m.color === analyzedColor);
+  if (myMoves.length < 10) return 50; // 该方落子太少，返回中性值
 
-  const split = Math.floor(moves.length / 3);
-  const early = moves.slice(0, split); // 前 1/3
-  const late = moves.slice(split * 2); // 后 1/3
+  const split = Math.floor(myMoves.length / 3);
+  const early = myMoves.slice(0, split); // 前 1/3
+  const late = myMoves.slice(split * 2); // 后 1/3
 
   // 计算每阶段的"平均中心距离"变化
   const avgCenterDist = (ms: SgfMove[]) => {
@@ -265,9 +272,13 @@ function analyzeRationality(
   moves: SgfMove[],
   boardSize: number,
   territory: ("B" | "W" | null)[][],
+  analyzedColor: "B" | "W",
 ): { score: number; moments: KeyMoment[] } {
   const moments: KeyMoment[] = [];
-  if (moves.length < 20) return { score: 50, moments };
+
+  // 统计被分析方的落子数
+  const myMoveCount = moves.filter((m) => m.color === analyzedColor).length;
+  if (myMoveCount < 10) return { score: 50, moments };
 
   // 构建棋盘状态（逐步）
   const board: ("B" | "W" | null)[][] = Array.from({ length: boardSize }, () =>
@@ -280,8 +291,13 @@ function analyzeRationality(
   for (let i = 0; i < moves.length; i++) {
     const m = moves[i];
 
+    // 始终更新棋盘
+    board[m.y][m.x] = m.color;
+
+    // 只统计被分析方
+    if (m.color !== analyzedColor) continue;
+
     // 判断该落子是否在自己已经被包围的区域
-    // 简化：如果该格子属于对方领地（或中立），且周围对方棋子较多
     const neighbors = [
       { x: m.x + 1, y: m.y },
       { x: m.x - 1, y: m.y },
@@ -310,10 +326,6 @@ function analyzeRationality(
       }
     }
 
-    // 理性止损：在对方领地内但选择放弃（不继续填子）
-    // 这个通过"缺席"来检测比较难，我们反过来通过 irrationalCount 来推导
-
-    board[m.y][m.x] = m.color;
     totalCount++;
   }
 
@@ -331,6 +343,7 @@ function analyzeRationality(
 function analyzeConflict(
   moves: SgfMove[],
   boardSize: number,
+  analyzedColor: "B" | "W",
 ): { score: number; moments: KeyMoment[] } {
   const moments: KeyMoment[] = [];
   if (moves.length < 10) return { score: 50, moments };
@@ -346,20 +359,14 @@ function analyzeConflict(
     const prev = moves[i - 1]; // 对方上一手
     const curr = moves[i]; // 我方回应
 
-    if (prev.color === curr.color) continue; // 不是回应对方
+    // 只关注被分析方回应对方的场景
+    if (curr.color !== analyzedColor || prev.color === curr.color) continue;
 
     // 判断是否是"对方靠过来"的情况
     const dist = manhattan(prev, curr);
     if (dist > 2) continue; // 离太远，不是直接回应
 
     // 检测回应方式
-    // 反击信号：
-    // - 落子与对方棋子相邻（贴身）
-    // - 落子方向"朝向"对方（切断方向）
-    // 退让信号：
-    // - 落子远离对方（长、跳）
-    // - 落子补强己方
-
     const isAdjacentToOpp = isAdjacent(curr, prev);
 
     // 检查是否还有其他对方棋子在附近（多子接触 = 激烈对抗）
@@ -421,13 +428,15 @@ function analyzeConflict(
  * 分析棋局前后期的落子"目的性"变化
  * 简化：后期是否出现更多远离双方棋子的"无目的落子"
  */
-function analyzeFocus(moves: SgfMove[], boardSize: number): number {
-  if (moves.length < 30) return 50;
+function analyzeFocus(moves: SgfMove[], boardSize: number, analyzedColor: "B" | "W"): number {
+  // 提取被分析方的落子
+  const myMoves = moves.filter((m) => m.color === analyzedColor);
+  if (myMoves.length < 15) return 50;
 
-  const split = Math.floor(moves.length / 3);
-  const early = moves.slice(0, split);
-  const mid = moves.slice(split, split * 2);
-  const late = moves.slice(split * 2);
+  const split = Math.floor(myMoves.length / 3);
+  const early = myMoves.slice(0, split);
+  const mid = myMoves.slice(split, split * 2);
+  const late = myMoves.slice(split * 2);
 
   // 计算每阶段的"平均意义度"
   // 意义度 = 该落子与最近已有棋子的距离（越近 = 越有意义）
@@ -449,8 +458,8 @@ function analyzeFocus(moves: SgfMove[], boardSize: number): number {
   };
 
   const earlyRatio = meaningfulRatio(early, early);
-  const midRatio = meaningfulRatio(mid, moves.slice(0, split * 2));
-  const lateRatio = meaningfulRatio(late, moves);
+  const midRatio = meaningfulRatio(mid, myMoves.slice(0, split * 2));
+  const lateRatio = meaningfulRatio(late, myMoves);
 
   // 如果后期有意义落子比例显著下降 = 专注力不足
   const decline = earlyRatio > 0 ? (earlyRatio - lateRatio) / earlyRatio : 0;
@@ -463,11 +472,14 @@ function analyzeFocus(moves: SgfMove[], boardSize: number): number {
 // 热力图生成
 // ───────────────────────────────────────────────
 
-function generateHeatmap(moves: SgfMove[], boardSize: number) {
+function generateHeatmap(moves: SgfMove[], boardSize: number, analyzedColor: "B" | "W") {
   const grid: number[][] = Array.from({ length: boardSize }, () => Array(boardSize).fill(0));
   const peaks: { x: number; y: number; value: number }[] = [];
 
-  for (const m of moves) {
+  // 只统计被分析方的落子热力
+  const myMoves = moves.filter((m) => m.color === analyzedColor);
+
+  for (const m of myMoves) {
     // 对周围施加高斯-like 影响
     for (let dy = -2; dy <= 2; dy++) {
       for (let dx = -2; dx <= 2; dx++) {
@@ -538,7 +550,10 @@ function generateTags(radar: SgfRadar): string[] {
 // 主分析入口
 // ────────────────────────────────────────────
 
-export function analyzeSgfGame(parsed: ParsedSgf): SgfAnalysis {
+export function analyzeSgfGame(
+  parsed: ParsedSgf,
+  analyzedColor: "B" | "W" = "B",
+): SgfAnalysis {
   const { boardSize, moves } = parsed;
 
   if (moves.length === 0) {
@@ -558,15 +573,15 @@ export function analyzeSgfGame(parsed: ParsedSgf): SgfAnalysis {
     };
   }
 
-  // 先估算领地
+  // 先估算领地（基于双方全部落子）
   const territory = estimateTerritory(boardSize, moves);
 
-  // 五维度分析
-  const riskResult = analyzeRisk(moves, boardSize, territory);
-  const resilienceScore = analyzeResilience(moves, boardSize);
-  const rationalResult = analyzeRationality(moves, boardSize, territory);
-  const conflictResult = analyzeConflict(moves, boardSize);
-  const focusScore = analyzeFocus(moves, boardSize);
+  // 五维度分析（按被分析方视角）
+  const riskResult = analyzeRisk(moves, boardSize, territory, analyzedColor);
+  const resilienceScore = analyzeResilience(moves, boardSize, analyzedColor);
+  const rationalResult = analyzeRationality(moves, boardSize, territory, analyzedColor);
+  const conflictResult = analyzeConflict(moves, boardSize, analyzedColor);
+  const focusScore = analyzeFocus(moves, boardSize, analyzedColor);
 
   const radar: SgfRadar = {
     riskAppetite: riskResult.score,
@@ -586,7 +601,7 @@ export function analyzeSgfGame(parsed: ParsedSgf): SgfAnalysis {
     .slice(0, 8); // 最多展示 8 个
 
   const tags = generateTags(radar);
-  const heatmap = generateHeatmap(moves, boardSize);
+  const heatmap = generateHeatmap(moves, boardSize, analyzedColor);
 
   return {
     radar,

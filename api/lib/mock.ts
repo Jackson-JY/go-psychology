@@ -5,6 +5,8 @@ interface MockInput {
   radar: RadarData;
   rationales: string[];
   experienceLevel?: ExperienceLevel;
+  /** 匹配到的原型名称，用于精准查找对应话术 */
+  archetypeName?: string;
 }
 
 interface MockOutput {
@@ -405,13 +407,28 @@ function pickPoolKey(radar: RadarData, tags: string[]): string {
   return "strategic";
 }
 
-/** 兜底 mock：从话术池中按标签 hash 挑一条 */
+/** 兜底 mock：优先按原型名查找话术，找不到则按池选择 */
 export function mockComment(input: MockInput): MockOutput {
-  const { radar, tags, rationales, experienceLevel } = input;
+  const { radar, tags, rationales, experienceLevel, archetypeName } = input;
+
+  // 优先按原型名在所有话术池中精准查找
+  if (archetypeName) {
+    const pools = experienceLevel === "beginner" ? BEGINNER_POOLS : POOLS;
+    for (const pool of Object.values(pools)) {
+      const match = pool.find((item) => item.headline === archetypeName);
+      if (match) return match;
+    }
+    // 入门版找不到，回退到进阶版
+    for (const pool of Object.values(POOLS)) {
+      const match = pool.find((item) => item.headline === archetypeName);
+      if (match) return match;
+    }
+  }
+
+  // Fallback：按维度阈值选池
   const poolKey = pickPoolKey(radar, tags);
   const pools = experienceLevel === "beginner" ? BEGINNER_POOLS : POOLS;
   const pool = pools[poolKey] ?? POOLS[poolKey];
-  // 用 rationales 的字符长度做 hash 选条目，保证同输入同输出
   const seed = rationales.join("").length + tags.length;
   const pick = pool[seed % pool.length];
   return pick;

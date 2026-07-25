@@ -77,7 +77,7 @@ export default function IntroStage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, duration: 0.6 }}
+          transition={{ delay: 1.3, duration: 0.6 }}
           className="flex flex-col gap-3"
         >
           <p className="mb-2 font-mono text-[10px] tracking-widest text-ink-900/50">

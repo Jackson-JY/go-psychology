@@ -4,10 +4,12 @@ import { SCENARIOS } from "@/lib/scenarios";
 
 export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster" | "sgf-upload" | "sgf-loading" | "sgf-result";
 export type ExperienceLevel = "beginner" | "skilled";
+export type Gender = "male" | "female";
 
 interface GameState {
   stage: Stage;
   experienceLevel: ExperienceLevel | null;
+  gender: Gender;
   currentScenarioIndex: number; // 0-2
   moves: MoveRecord[];
   scenarioStartTime: number;
@@ -22,6 +24,7 @@ interface GameState {
   setResult: (result: AnalyzeResponse) => void;
   setSgfResult: (result: SgfAnalysisResponse) => void;
   setError: (error: string | null) => void;
+  setGender: (gender: Gender) => void;
   goPoster: () => void;
   restart: () => void;
   goSgfUpload: () => void;
@@ -30,6 +33,7 @@ interface GameState {
 export const useGameStore = create<GameState>((set, get) => ({
   stage: "intro",
   experienceLevel: null,
+  gender: "male",
   currentScenarioIndex: 0,
   moves: [],
   scenarioStartTime: 0,
@@ -84,6 +88,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   setResult: (result) => set({ stage: "result", result }),
   setSgfResult: (sgfResult) => set({ stage: "sgf-result", sgfResult }),
   setError: (error) => set({ error, stage: "result" }),
+  setGender: (gender) => set({ gender }),
   goPoster: () => set({ stage: "poster" }),
   goSgfUpload: () => set({ stage: "sgf-upload", sgfResult: null, error: null }),
   restart: () =>

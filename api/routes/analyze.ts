@@ -8,6 +8,7 @@ import { mapRadarToInvestment } from "../lib/investment.js";
 import { mapRadarToCareer } from "../lib/career.js";
 import { generateHeatmap } from "../lib/heatmapData.js";
 import { generateDeepReport } from "../lib/deepReport.js";
+import { matchArchetype, mapFullRadarToCore } from "@shared/archetypes.js";
 import type { AnalyzeRequest, AnalyzeResponse } from "@shared/types";
 
 const router = Router();
@@ -53,6 +54,9 @@ router.post("/", async (req: Request, res: Response) => {
   const heatmap = generateHeatmap(moves);
   const deepReport = generateDeepReport(profile.radar, experienceLevel);
 
+  // 统一使用 matchArchetype 匹配原型，确保 headline 与前端原型卡片一致
+  const archetype = matchArchetype(mapFullRadarToCore(profile.radar));
+
   let source: "deepseek" | "mock" = "mock";
   let headline: string;
   let comment: string;
@@ -60,18 +64,20 @@ router.post("/", async (req: Request, res: Response) => {
   if (hasDeepSeekKey()) {
     try {
       const ai = await callDeepSeek({ ...profile, experienceLevel });
-      headline = ai.headline;
+      // DeepSeek 生成的 headline 可能与 matchArchetype 不一致，
+      // 统一用 archetype.name 作为 headline，保留 AI 的 comment
+      headline = archetype.name;
       comment = ai.comment;
       source = "deepseek";
     } catch (err) {
       console.error("[analyze] DeepSeek 失败，降级 mock:", (err as Error).message);
-      const mock = mockComment({ ...profile, experienceLevel });
-      headline = mock.headline;
+      const mock = mockComment({ ...profile, experienceLevel, archetypeName: archetype.name });
+      headline = archetype.name;
       comment = mock.comment;
     }
   } else {
-    const mock = mockComment({ ...profile, experienceLevel });
-    headline = mock.headline;
+    const mock = mockComment({ ...profile, experienceLevel, archetypeName: archetype.name });
+    headline = archetype.name;
     comment = mock.comment;
   }
 

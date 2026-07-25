@@ -1,9 +1,15 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, RotateCcw, Target, Brain, Shield, Swords, Eye } from "lucide-react";
 import Seal from "@/components/Seal";
 import HeatmapChart from "@/components/HeatmapChart";
 import { useGameStore } from "@/store";
 import type { SgfAnalysisResponse } from "@/lib/types";
+import {
+  matchArchetype,
+  getArchetypeSvgUrl,
+  type CoreRadar,
+} from "@/lib/archetypes";
 
 const RADAR_AXES = [
   { key: "riskAppetite" as const, label: "风险偏好", icon: Target },
@@ -166,10 +172,20 @@ export default function SgfResultStage() {
   const sgfResult = useGameStore((s) => s.sgfResult);
   const restart = useGameStore((s) => s.restart);
   const goSgfUpload = useGameStore((s) => s.goSgfUpload);
+  const gender = useGameStore((s) => s.gender);
+  const setGender = useGameStore((s) => s.setGender);
 
   if (!sgfResult) return null;
 
   const { radar, tags, keyMoments, moveCount, boardSize, heatmap } = sgfResult;
+
+  const archetype = useMemo(() => {
+    return matchArchetype(radar as CoreRadar);
+  }, [radar]);
+
+  const archetypeImgUrl = useMemo(() => {
+    return getArchetypeSvgUrl(archetype, gender);
+  }, [archetype, gender]);
 
   // 维度描述映射
   const dimensionDescriptions: Record<string, string> = {
@@ -231,7 +247,7 @@ export default function SgfResultStage() {
         className="mt-6 text-center"
       >
         <div className="font-mono text-[10px] tracking-widest text-ink-900/40">
-          {boardSize}×{boardSize} · {moveCount} 手 · 五维心理画像
+          {boardSize}×{boardSize} · {moveCount} 手 · {sgfResult.analyzedColor === "B" ? "黑棋" : "白棋"}视角 · 五维心理画像
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
           {tags.map((tag) => (
@@ -258,6 +274,68 @@ export default function SgfResultStage() {
           </div>
         )}
       </motion.div>
+
+      {/* 人物原型卡片 */}
+      <motion.section
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.15, duration: 0.5 }}
+        className="mt-5"
+      >
+        <div className="relative overflow-hidden rounded-lg border border-ink-900/8 bg-paper-200">
+          <div className="flex flex-col items-center p-4">
+            <div className="relative">
+              <img
+                src={archetypeImgUrl}
+                alt={archetype.name}
+                className="h-auto w-36 rounded-md shadow-md"
+              />
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-cinnabar px-3 py-0.5 font-kai text-[10px] text-paper-100">
+                你的原型
+              </div>
+            </div>
+            <div className="mt-5 text-center">
+              <h3 className="font-serif text-lg font-bold text-ink-900">
+                「{archetype.name}」
+              </h3>
+              <p className="mt-1 font-mono text-[9px] tracking-widest text-ink-900/40">
+                {archetype.subtitle}
+              </p>
+            </div>
+            <p className="mt-2.5 text-center font-kai text-[12px] leading-relaxed text-ink-900/70">
+              {archetype.description}
+            </p>
+            {/* 性别切换 */}
+            <div className="mt-3.5 flex items-center gap-3">
+              <span className="font-mono text-[9px] tracking-widest text-ink-900/30">
+                切换形象：
+              </span>
+              <div className="flex overflow-hidden rounded-sm border border-ink-900/15">
+                <button
+                  onClick={() => setGender("male")}
+                  className={`px-2.5 py-1 font-kai text-[11px] transition-colors ${
+                    gender === "male"
+                      ? "bg-ink-900 text-paper-100"
+                      : "bg-paper-100 text-ink-900/60 hover:bg-ink-900/5"
+                  }`}
+                >
+                  男性
+                </button>
+                <button
+                  onClick={() => setGender("female")}
+                  className={`px-2.5 py-1 font-kai text-[11px] transition-colors ${
+                    gender === "female"
+                      ? "bg-ink-900 text-paper-100"
+                      : "bg-paper-100 text-ink-900/60 hover:bg-ink-900/5"
+                  }`}
+                >
+                  女性
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* 雷达图 */}
       <motion.div

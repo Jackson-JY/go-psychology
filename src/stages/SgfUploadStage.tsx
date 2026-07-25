@@ -54,6 +54,7 @@ export default function SgfUploadStage() {
     playerBlack?: string;
     playerWhite?: string;
   } | null>(null);
+  const [selectedColor, setSelectedColor] = useState<"B" | "W">("B");
 
   const parsePreview = useCallback((content: string) => {
     const szMatch = content.match(/SZ\[(\d+)\]/);
@@ -132,7 +133,7 @@ export default function SgfUploadStage() {
     if (fileType === "sgf" && sgfContent) {
       setAnalyzing(true);
       try {
-        const result = await analyzeSgf(sgfContent, "B");
+        const result = await analyzeSgf(sgfContent, selectedColor);
         setSgfResult({ ...result, source: "sgf" });
       } catch (err) {
         setError((err as Error).message || "棋谱分析失败");
@@ -142,7 +143,7 @@ export default function SgfUploadStage() {
     } else if (fileType === "image" && imageBase64) {
       setAnalyzing(true);
       try {
-        const result = await analyzeImage(imageBase64, "B");
+        const result = await analyzeImage(imageBase64, selectedColor);
         setSgfResult(result);
       } catch (err) {
         setError((err as Error).message || "图片分析失败");
@@ -272,6 +273,40 @@ export default function SgfUploadStage() {
             </div>
           )}
         </div>
+
+        {/* 执子方选择 */}
+        {hasFile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="mt-4 flex items-center gap-3"
+          >
+            <span className="font-kai text-xs text-ink-900/50">分析视角：</span>
+            <div className="flex rounded-sm border border-ink-900/15 overflow-hidden">
+              <button
+                onClick={() => setSelectedColor("B")}
+                className={`px-3 py-1.5 font-kai text-xs transition-colors ${
+                  selectedColor === "B"
+                    ? "bg-ink-900 text-paper-100"
+                    : "bg-paper-100 text-ink-900/60 hover:bg-ink-900/5"
+                }`}
+              >
+                黑棋
+              </button>
+              <button
+                onClick={() => setSelectedColor("W")}
+                className={`px-3 py-1.5 font-kai text-xs transition-colors ${
+                  selectedColor === "W"
+                    ? "bg-ink-900 text-paper-100"
+                    : "bg-paper-100 text-ink-900/60 hover:bg-ink-900/5"
+                }`}
+              >
+                白棋
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* 分析按钮 */}
         <motion.button

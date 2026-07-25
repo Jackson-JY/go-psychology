@@ -1,13 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import RadarChart from "@/components/RadarChart";
 import HeatmapChart from "@/components/HeatmapChart";
 import Seal from "@/components/Seal";
 import { useGameStore } from "@/store";
+import {
+  matchArchetype,
+  getArchetypeSvgUrl,
+  mapFullRadarToCore,
+  type FullRadar,
+} from "@/lib/archetypes";
 
 export default function ResultStage() {
-  const { result, error, goPoster, restart } = useGameStore();
+  const { result, error, goPoster, restart, gender, setGender } = useGameStore();
   const [typedComment, setTypedComment] = useState("");
+
+  const archetype = useMemo(() => {
+    if (!result) return null;
+    const core = mapFullRadarToCore(result.radar as unknown as FullRadar);
+    return matchArchetype(core);
+  }, [result]);
+
+  const archetypeImgUrl = useMemo(() => {
+    if (!archetype) return "";
+    return getArchetypeSvgUrl(archetype, gender);
+  }, [archetype, gender]);
 
   useEffect(() => {
     if (!result) return;
@@ -53,6 +70,70 @@ export default function ResultStage() {
           </h2>
           <div className="mx-auto mt-2 h-px w-12 bg-cinnabar" />
         </header>
+
+        {/* 人物原型卡片 */}
+        {archetype && (
+          <motion.section
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, duration: 0.6 }}
+            className="mx-5 mb-5"
+          >
+            <div className="relative overflow-hidden rounded-lg border border-ink-900/8 bg-paper-200">
+              <div className="flex flex-col items-center p-4">
+                <div className="relative">
+                  <img
+                    src={archetypeImgUrl}
+                    alt={archetype.name}
+                    className="h-auto w-40 rounded-md shadow-md"
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-cinnabar px-3 py-0.5 font-kai text-[10px] text-paper-100">
+                    你的原型
+                  </div>
+                </div>
+                <div className="mt-5 text-center">
+                  <h3 className="font-serif text-xl font-bold text-ink-900">
+                    「{archetype.name}」
+                  </h3>
+                  <p className="mt-1 font-mono text-[10px] tracking-widest text-ink-900/40">
+                    {archetype.subtitle}
+                  </p>
+                </div>
+                <p className="mt-3 text-center font-kai text-[13px] leading-relaxed text-ink-900/70">
+                  {archetype.description}
+                </p>
+                {/* 性别切换 */}
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="font-mono text-[9px] tracking-widest text-ink-900/30">
+                    切换形象：
+                  </span>
+                  <div className="flex overflow-hidden rounded-sm border border-ink-900/15">
+                    <button
+                      onClick={() => setGender("male")}
+                      className={`px-2.5 py-1 font-kai text-[11px] transition-colors ${
+                        gender === "male"
+                          ? "bg-ink-900 text-paper-100"
+                          : "bg-paper-100 text-ink-900/60 hover:bg-ink-900/5"
+                      }`}
+                    >
+                      男性
+                    </button>
+                    <button
+                      onClick={() => setGender("female")}
+                      className={`px-2.5 py-1 font-kai text-[11px] transition-colors ${
+                        gender === "female"
+                          ? "bg-ink-900 text-paper-100"
+                          : "bg-paper-100 text-ink-900/60 hover:bg-ink-900/5"
+                      }`}
+                    >
+                      女性
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
 
         <motion.section
           initial={{ opacity: 0, y: 12 }}

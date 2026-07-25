@@ -75,8 +75,8 @@ router.post("/", async (req: Request, res: Response) => {
       return;
     }
 
-    // 执行分析
-    const analysis = analyzeSgfGame(parsed);
+    // 执行分析（按选定颜色视角）
+    const analysis = analyzeSgfGame(parsed, color);
 
     res.json({
       ...analysis,
