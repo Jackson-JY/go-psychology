@@ -44,14 +44,24 @@ function determineType(scores: { O: number; C: number; E: number; A: number; N: 
   return "default";
 }
 
+/**
+ * 将 5 维雷达数据映射为 BigFive 分数
+ *
+ * 映射逻辑（与 SGF 五维保持一致）：
+ * - O(开放性): 风险偏好 + 专注 → 愿意尝试新事物、思维开放
+ * - C(尽责性): 理性 + 专注 + 抗压 → 自律、可靠、善于规划
+ * - E(外向性): 风险偏好 + 冲突应对 → 善于社交、精力充沛
+ * - A(宜人性): 冲突应对反向 + 抗压 → 温和友善、乐于助人
+ * - N(神经质): 抗压反向 + 理性反向 → 情绪波动、敏感
+ */
 export function mapRadarToBigFive(radar: RadarData): BigFiveResult {
-  const { riskAppetite, bigPicture, decisiveness, controlDesire, sunkCost, emotionalStability, cooperation, innovation, patience } = radar;
+  const { riskAppetite, resilience, rationality, conflictResponse, focus } = radar;
 
-  const O = Math.round((innovation * 0.4 + bigPicture * 0.3 + riskAppetite * 0.3));
-  const C = Math.round((decisiveness * 0.4 + patience * 0.3 + (100 - sunkCost) * 0.3));
-  const E = Math.round((riskAppetite * 0.4 + controlDesire * 0.3 + (100 - patience) * 0.3));
-  const A = Math.round((cooperation * 0.5 + (100 - controlDesire) * 0.3 + emotionalStability * 0.2));
-  const N = Math.round((100 - emotionalStability) * 0.6 + sunkCost * 0.4);
+  const O = Math.round((riskAppetite * 0.5 + focus * 0.3 + (100 - rationality) * 0.2));
+  const C = Math.round((rationality * 0.4 + focus * 0.4 + resilience * 0.2));
+  const E = Math.round((riskAppetite * 0.5 + conflictResponse * 0.5));
+  const A = Math.round(((100 - conflictResponse) * 0.6 + resilience * 0.4));
+  const N = Math.round(((100 - resilience) * 0.6 + (100 - rationality) * 0.4));
 
   const typeKey = determineType({ O, C, E, A, N });
   const meta = BIGFIVE_TYPES[typeKey] || BIGFIVE_TYPES.default;

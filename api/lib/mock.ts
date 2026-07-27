@@ -391,17 +391,17 @@ const BEGINNER_POOLS: Record<string, { headline: string; comment: string }[]> = 
   ],
 };
 
-/** 根据雷达数据挑选最合适的话术池 */
+/** 根据 5 维雷达数据挑选最合适的话术池 */
 function pickPoolKey(radar: RadarData, tags: string[]): string {
   if (tags.includes("极度激进") || radar.riskAppetite >= 70) return "aggressive";
-  if (tags.includes("执念深") || radar.sunkCost >= 70) return "stubborn";
-  if (tags.includes("掌控欲") || radar.controlDesire >= 70) return "controller";
-  if (tags.includes("大局观好") || radar.bigPicture >= 70) return "strategic";
-  if (radar.emotionalStability >= 70) return "stable";
-  if (radar.cooperation >= 70) return "cooperative";
-  if (radar.innovation >= 70) return "innovative";
-  if (radar.patience >= 70) return "patient";
-  if (radar.decisiveness >= 70) return "decisive";
+  if (tags.includes("执念深") || radar.rationality <= 30) return "stubborn";
+  if (tags.includes("掌控欲") || radar.conflictResponse >= 70) return "controller";
+  if (tags.includes("大局观好") || radar.focus >= 70) return "strategic";
+  if (radar.resilience >= 70) return "stable";
+  if (radar.conflictResponse <= 30) return "cooperative";
+  if (radar.riskAppetite >= 60 && radar.rationality >= 60) return "innovative";
+  if (radar.focus >= 65 && radar.riskAppetite <= 40) return "patient";
+  if (radar.rationality >= 70 && radar.conflictResponse >= 60) return "decisive";
   if (radar.riskAppetite <= 35 || tags.includes("保守")) return "defensible";
   // 默认走战略型
   return "strategic";

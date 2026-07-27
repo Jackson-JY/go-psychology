@@ -11,14 +11,11 @@ interface AxisDef {
 }
 
 const AXES: AxisDef[] = [
-  { key: "sunkCost", label: "沉没成本" },
   { key: "riskAppetite", label: "风险偏好" },
-  { key: "bigPicture", label: "大局观" },
-  { key: "decisiveness", label: "决断力" },
-  { key: "controlDesire", label: "掌控欲" },
-  { key: "emotionalStability", label: "情绪稳定" },
-  { key: "cooperation", label: "合作倾向" },
-  { key: "innovation", label: "创新思维" },
+  { key: "resilience", label: "逆境抗压" },
+  { key: "rationality", label: "决策理性" },
+  { key: "conflictResponse", label: "冲突应对" },
+  { key: "focus", label: "长效专注" },
 ];
 
 export default function RadarChart({ data, size = 240 }: RadarChartProps) {

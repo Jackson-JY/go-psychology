@@ -4,6 +4,7 @@
  */
 
 import type { SgfMove, ParsedSgf } from "./sgf.js";
+import { generateTags } from "@shared/archetypes.js";
 
 /** 五维心理雷达（0-100） */
 export interface SgfRadar {
@@ -514,36 +515,6 @@ function generateHeatmap(moves: SgfMove[], boardSize: number, analyzedColor: "B"
   }
 
   return { grid, peaks };
-}
-
-// ───────────────────────────────────────────────
-// 标签生成
-// ───────────────────────────────────────────────
-
-function generateTags(radar: SgfRadar): string[] {
-  const tags: string[] = [];
-
-  if (radar.riskAppetite >= 65) tags.push("激进冒险");
-  else if (radar.riskAppetite <= 35) tags.push("稳健保守");
-
-  if (radar.resilience >= 65) tags.push("逆境抗压");
-  else if (radar.resilience <= 35) tags.push("心态易崩");
-
-  if (radar.rationality >= 65) tags.push("理性止损");
-  else if (radar.rationality <= 35) tags.push("沉没成本");
-
-  if (radar.conflictResponse >= 65) tags.push("对抗型");
-  else if (radar.conflictResponse <= 35) tags.push("妥协型");
-
-  if (radar.focus >= 65) tags.push("全程专注");
-  else if (radar.focus <= 35) tags.push("后程乏力");
-
-  // 组合标签
-  if (radar.riskAppetite >= 60 && radar.conflictResponse >= 60) tags.push("进攻型棋手");
-  if (radar.rationality >= 60 && radar.focus >= 60) tags.push("理性控盘者");
-  if (radar.resilience >= 60 && radar.riskAppetite <= 40) tags.push("稳健防守型");
-
-  return tags.length > 0 ? tags : ["均衡型棋手"];
 }
 
 // ───────────────────────────────────────────────

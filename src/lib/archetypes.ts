@@ -6,9 +6,7 @@ export {
   type Gender,
   type CoreRadar,
   type RadarData,
-  type FullRadar,
   type Archetype,
-  mapFullRadarToCore,
   matchArchetype,
   ARCHETYPES,
 } from "@shared/archetypes";

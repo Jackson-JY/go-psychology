@@ -10,16 +10,31 @@ interface GoBoardProps {
   disabled?: boolean;
   size?: number;
   showHint?: boolean;
+  boardSize?: number;
 }
 
-const BOARD_N = 9;
-const STAR_POINTS: Coord[] = [
-  { x: 2, y: 2 },
-  { x: 6, y: 2 },
-  { x: 4, y: 4 },
-  { x: 2, y: 6 },
-  { x: 6, y: 6 },
-];
+function getStarPoints(n: number): Coord[] {
+  if (n === 9) {
+    return [
+      { x: 2, y: 2 },
+      { x: 6, y: 2 },
+      { x: 4, y: 4 },
+      { x: 2, y: 6 },
+      { x: 6, y: 6 },
+    ];
+  }
+  if (n === 13) {
+    return [
+      { x: 3, y: 3 },
+      { x: 9, y: 3 },
+      { x: 6, y: 6 },
+      { x: 3, y: 9 },
+      { x: 9, y: 9 },
+    ];
+  }
+  // 默认无星位（其他尺寸）
+  return [];
+}
 
 export default function GoBoard({
   stones,
@@ -30,9 +45,13 @@ export default function GoBoard({
   disabled = false,
   size = 320,
   showHint = false,
+  boardSize = 9,
 }: GoBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ripple, setRipple] = useState<{ x: number; y: number; t: number } | null>(null);
+
+  const BOARD_N = boardSize;
+  const STAR_POINTS = getStarPoints(BOARD_N);
 
   const padding = size / (BOARD_N + 1);
   const inner = size - padding * 2;
@@ -61,7 +80,7 @@ export default function GoBoard({
     const occupied = stones.some((s) => s.x === best!.x && s.y === best!.y);
     if (occupied) return null;
     return { x: best.x, y: best.y };
-  }, [toPx, stones, cellSize]);
+  }, [toPx, stones, cellSize, BOARD_N]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

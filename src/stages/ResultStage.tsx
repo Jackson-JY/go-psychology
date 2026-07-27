@@ -7,8 +7,6 @@ import { useGameStore } from "@/store";
 import {
   matchArchetype,
   getArchetypeSvgUrl,
-  mapFullRadarToCore,
-  type FullRadar,
 } from "@/lib/archetypes";
 
 export default function ResultStage() {
@@ -17,8 +15,7 @@ export default function ResultStage() {
 
   const archetype = useMemo(() => {
     if (!result) return null;
-    const core = mapFullRadarToCore(result.radar as unknown as FullRadar);
-    return matchArchetype(core);
+    return matchArchetype(result.radar);
   }, [result]);
 
   const archetypeImgUrl = useMemo(() => {

@@ -10,11 +10,11 @@ interface OptionArea {
 interface OptionOverlaysProps {
   areas: OptionArea[];
   size?: number;
+  boardSize?: number;
 }
 
-const BOARD_N = 9;
-
-export default function OptionOverlays({ areas, size = 320 }: OptionOverlaysProps) {
+export default function OptionOverlays({ areas, size = 320, boardSize = 9 }: OptionOverlaysProps) {
+  const BOARD_N = boardSize;
   const padding = size / (BOARD_N + 1);
   const inner = size - padding * 2;
   const cellSize = inner / (BOARD_N - 1);

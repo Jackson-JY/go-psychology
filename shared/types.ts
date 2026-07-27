@@ -23,17 +23,13 @@ export interface MoveRecord extends Coord {
   elapsedMs: number; // 思考时长（毫秒）
 }
 
-/** 性格雷达 8 维数据（0-100） */
+/** 性格雷达 5 维数据（0-100），与 SGF 棋谱分析保持一致 */
 export interface RadarData {
-  sunkCost: number; // 沉没成本谬误
-  riskAppetite: number; // 风险偏好
-  bigPicture: number; // 大局观
-  decisiveness: number; // 决断力
-  controlDesire: number; // 掌控欲
-  emotionalStability: number; // 情绪稳定性
-  cooperation: number; // 合作倾向
-  innovation: number; // 创新思维
-  patience: number; // 耐心程度
+  riskAppetite: number; // 风险偏好（激进 vs 保守）
+  resilience: number; // 逆境抗压
+  rationality: number; // 决策理性度（越高越理性，低=沉没成本）
+  conflictResponse: number; // 冲突应对（高=对抗型，低=妥协型）
+  focus: number; // 长效专注力
 }
 
 /** 用户围棋经验水平 */

@@ -48,31 +48,30 @@ const MBTI_META: Record<MbtiType, { title: string; subtitle: string }> = {
 /**
  * 将 5 维雷达数据映射为 MBTI 4 维分数
  *
- * 映射逻辑：
- * - E/I: 风险偏好(riskAppetite) + 掌控欲(controlDesire) → 主动/外向型 vs 观察/内向型
- * - S/N: 大局观(bigPicture)反向 + 沉没成本(sunkCost) → 关注当下细节 vs 关注未来可能
- * - T/F: 决断力(decisiveness) + 沉没成本反向 → 理性决策 vs 感性牵绊
- * - J/P: 决断力(decisiveness) + 风险偏好反向 → 规划果断 vs 灵活开放
+ * 映射逻辑（与 SGF 五维保持一致）：
+ * - E/I: 风险偏好(riskAppetite) + 冲突应对(conflictResponse) → 主动/外向型 vs 观察/内向型
+ * - S/N: 决策理性度(rationality)反向 + 专注(focus) → 关注当下细节 vs 关注未来可能
+ * - T/F: 理性(rationality) + 专注(focus) → 理性决策 vs 感性牵绊
+ * - J/P: 专注(focus) + 风险偏好反向 → 规划果断 vs 灵活开放
  */
 export function mapRadarToMbti(radar: RadarData): MbtiResult {
-  const { riskAppetite, controlDesire, bigPicture, sunkCost, decisiveness } = radar;
+  const { riskAppetite, conflictResponse, rationality, focus } = radar;
 
   // E/I: 主动能量指数 (0-100)
-  // 高冒险 + 高掌控 = 外向(E)；低冒险 + 高大局观 = 内向(I)
-  const eiScore = Math.round((riskAppetite * 0.6 + controlDesire * 0.4));
+  // 高冒险 + 高对抗 = 外向(E)；低冒险 + 低对抗 = 内向(I)
+  const eiScore = Math.round((riskAppetite * 0.6 + conflictResponse * 0.4));
 
   // S/N: 感知方式指数 (0-100)
-  // 高沉没成本 = 关注已发生的具体事实(S)；高大局观 = 关注抽象未来(N)
-  // 这里 >50 偏 S，<50 偏 N
-  const snScore = Math.round((sunkCost * 0.7 + (100 - bigPicture) * 0.3));
+  // 低理性 = 关注已发生的具体事实(S)；高理性 + 高专注 = 关注抽象未来(N)
+  const snScore = Math.round(((100 - rationality) * 0.6 + focus * 0.4));
 
   // T/F: 决策方式指数 (0-100)
-  // 高决断 + 低沉没 = 理性思考(T)；低决断 + 高沉没 = 感性情感(F)
-  const tfScore = Math.round((decisiveness * 0.6 + (100 - sunkCost) * 0.4));
+  // 高理性 + 高专注 = 理性思考(T)；低理性 = 感性情感(F)
+  const tfScore = Math.round((rationality * 0.6 + focus * 0.4));
 
   // J/P: 生活方式指数 (0-100)
-  // 高决断 = 判断型喜欢规划(J)；高冒险 + 低决断 = 感知型灵活开放(P)
-  const jpScore = Math.round((decisiveness * 0.7 + (100 - riskAppetite) * 0.3));
+  // 高专注 = 判断型喜欢规划(J)；高冒险 + 低专注 = 感知型灵活开放(P)
+  const jpScore = Math.round((focus * 0.7 + (100 - riskAppetite) * 0.3));
 
   const ei: "E" | "I" = eiScore >= 50 ? "E" : "I";
   const sn: "S" | "N" = snScore >= 50 ? "S" : "N";

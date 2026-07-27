@@ -32,34 +32,46 @@ const INVESTMENT_TYPES: Record<string, InvestmentResult> = {
   },
 };
 
+/**
+ * 根据 5 维雷达确定投资风险等级
+ */
 function determineRiskLevel(radar: RadarData): "conservative" | "moderate" | "aggressive" {
-  const { riskAppetite, decisiveness, patience } = radar;
-  
-  if (riskAppetite >= 65 || (riskAppetite >= 55 && decisiveness >= 60)) {
+  const { riskAppetite, rationality, focus } = radar;
+
+  if (riskAppetite >= 65 || (riskAppetite >= 55 && rationality >= 60)) {
     return "aggressive";
   }
-  if (riskAppetite <= 35 || (riskAppetite <= 45 && patience >= 60)) {
+  if (riskAppetite <= 35 || (riskAppetite <= 45 && focus >= 60)) {
     return "conservative";
   }
   return "moderate";
 }
 
+/**
+ * 将 5 维雷达映射为投资风格分析
+ */
 export function mapRadarToInvestment(radar: RadarData): InvestmentResult {
   const riskLevel = determineRiskLevel(radar);
   const base = INVESTMENT_TYPES[riskLevel];
 
-  if (radar.sunkCost >= 60) {
+  if (radar.rationality <= 40) {
     base.pitfalls.push("容易越跌越补，陷入沉没成本陷阱");
     base.recommendations.push("设定硬性止损线，触发即执行");
   }
 
-  if (radar.bigPicture >= 70) {
-    base.suitableStrategies.push("宏观对冲策略");
-    base.recommendations.push("关注政策和周期变化");
+  if (radar.focus >= 70) {
+    base.suitableStrategies.push("长期持有策略");
+    base.recommendations.push("定期复盘但减少频繁操作");
   }
 
-  if (radar.innovation >= 65) {
-    base.suitableStrategies.push("新兴行业早期布局");
+  if (radar.resilience >= 65) {
+    base.suitableStrategies.push("能承受较大回撤的成长型投资");
+    base.recommendations.push("利用抗压优势，避免在恐慌中抛售");
+  }
+
+  if (radar.conflictResponse >= 65) {
+    base.pitfalls.push("过度自信导致重仓单一标的");
+    base.recommendations.push("建立仓位上限纪律，单只标的不超过 20%");
   }
 
   return { ...base };

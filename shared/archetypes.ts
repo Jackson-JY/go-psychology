@@ -3,45 +3,19 @@
  * 基于五维心理画像匹配最具代表性的人物原型
  */
 
+import type { RadarData } from "./types.js";
+
 export type Gender = "male" | "female";
 
-/** 五维核心雷达（棋谱分析使用） */
+export { RadarData };
+
+/** 五维核心雷达（与 RadarData 等价） */
 export interface CoreRadar {
   riskAppetite: number;
   resilience: number;
   rationality: number;
   conflictResponse: number;
   focus: number;
-}
-
-/** 兼容命名：CoreRadar = RadarData（棋谱分析中的类型名） */
-export type RadarData = CoreRadar;
-
-/** 八维完整雷达（三关测试使用） */
-export interface FullRadar {
-  sunkCost: number;
-  riskAppetite: number;
-  bigPicture: number;
-  decisiveness: number;
-  controlDesire: number;
-  emotionalStability: number;
-  cooperation: number;
-  innovation: number;
-  patience: number;
-}
-
-/**
- * 将八维雷达映射为五维核心雷达
- * 用于三关测试结果匹配原型
- */
-export function mapFullRadarToCore(full: FullRadar): CoreRadar {
-  return {
-    riskAppetite: full.riskAppetite,
-    resilience: full.emotionalStability,
-    rationality: Math.round((100 - full.sunkCost) * 0.6 + full.decisiveness * 0.4),
-    conflictResponse: Math.round((100 - full.cooperation) * 0.5 + full.controlDesire * 0.5),
-    focus: Math.round(full.patience * 0.5 + full.bigPicture * 0.3 + full.emotionalStability * 0.2),
-  };
 }
 
 export interface Archetype {
@@ -318,6 +292,36 @@ export function matchArchetype(radar: RadarData): Archetype {
   }
 
   return best;
+}
+
+/**
+ * 根据五维雷达生成性格标签
+ * 测试题与 SGF 棋谱分析共用同一套标签规则
+ */
+export function generateTags(radar: RadarData): string[] {
+  const tags: string[] = [];
+
+  if (radar.riskAppetite >= 65) tags.push("激进冒险");
+  else if (radar.riskAppetite <= 35) tags.push("稳健保守");
+
+  if (radar.resilience >= 65) tags.push("逆境抗压");
+  else if (radar.resilience <= 35) tags.push("心态易崩");
+
+  if (radar.rationality >= 65) tags.push("理性止损");
+  else if (radar.rationality <= 35) tags.push("沉没成本");
+
+  if (radar.conflictResponse >= 65) tags.push("对抗型");
+  else if (radar.conflictResponse <= 35) tags.push("妥协型");
+
+  if (radar.focus >= 65) tags.push("全程专注");
+  else if (radar.focus <= 35) tags.push("后程乏力");
+
+  // 组合标签
+  if (radar.riskAppetite >= 60 && radar.conflictResponse >= 60) tags.push("进攻型棋手");
+  if (radar.rationality >= 60 && radar.focus >= 60) tags.push("理性控盘者");
+  if (radar.resilience >= 60 && radar.riskAppetite <= 40) tags.push("稳健防守型");
+
+  return tags.length > 0 ? tags : ["均衡型棋手"];
 }
 
 export { ARCHETYPES };

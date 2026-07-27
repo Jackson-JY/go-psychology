@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GoBoard from "@/components/GoBoard";
 import CharStream from "@/components/CharStream";
@@ -6,9 +6,25 @@ import Seal from "@/components/Seal";
 import OptionOverlays from "@/components/OptionOverlays";
 import { SCENARIOS, useGameStore } from "@/store";
 import { analyzeMoves } from "@/lib/api";
-import type { Coord } from "@/lib/types";
+import type { Coord, PlacedStone } from "@/lib/types";
 
 const AUTO_ADVANCE_MS = 2000;
+const BASE_BOARD_SIZE = 9;
+
+/** 将基准 9x9 坐标按比例映射到目标棋盘大小 */
+function scaleCoord(c: Coord, targetSize: number): Coord {
+  if (targetSize === BASE_BOARD_SIZE) return c;
+  const scale = (targetSize - 1) / (BASE_BOARD_SIZE - 1);
+  return {
+    x: Math.round(c.x * scale),
+    y: Math.round(c.y * scale),
+  };
+}
+
+function scaleStones(stones: PlacedStone[], targetSize: number): PlacedStone[] {
+  if (targetSize === BASE_BOARD_SIZE) return stones;
+  return stones.map((s) => ({ ...s, ...scaleCoord(s, targetSize) }));
+}
 
 export default function PlayStage() {
   const {
@@ -24,27 +40,45 @@ export default function PlayStage() {
   const effectiveLevel = experienceLevel ?? "beginner";
   const copy = scenario.copy[effectiveLevel];
   const isBeginner = effectiveLevel === "beginner";
+  const boardSize = effectiveLevel === "skilled" ? 13 : 9;
 
   const [userMove, setUserMove] = useState<Coord | null>(null);
   const [phase, setPhase] = useState<"play" | "placed">("play");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMoveRef = useRef<Coord | null>(null);
 
-  // 零基础模式下 A/B 选项的视觉区域提示
-  const optionAreas = isBeginner
-    ? [
-        // A 区域：红色，继续投入/攻击型选择（基于当前题目的热区）
-        { x: scenario.id === "lifeDeath" ? 5 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 6,
-          y: scenario.id === "lifeDeath" ? 7 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 1,
-          label: copy.optionA ?? "选择 A",
-          color: "cinnabar" as const },
-        // B 区域：蓝色，放弃/转移型选择
-        { x: scenario.id === "lifeDeath" ? 6 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 0 : 5,
-          y: scenario.id === "lifeDeath" ? 3 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 4 : 7,
-          label: copy.optionB ?? "选择 B",
-          color: "bamboo" as const },
-      ]
-    : [];
+  // 根据棋盘大小缩放预设棋子坐标
+  const scaledStones = useMemo(
+    () => scaleStones(scenario.stones, boardSize),
+    [scenario.stones, boardSize],
+  );
+
+  const scaledFocus = useMemo(
+    () => (scenario.focus ? scaleCoord(scenario.focus, boardSize) : undefined),
+    [scenario.focus, boardSize],
+  );
+
+  // 零基础模式下 A/B 选项的视觉区域提示（坐标按棋盘大小缩放）
+  const optionAreas = useMemo(() => {
+    if (!isBeginner) return [];
+    const areas = [
+      // A 区域：红色，继续投入/攻击型选择
+      {
+        x: scenario.id === "lifeDeath" ? 5 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 6,
+        y: scenario.id === "lifeDeath" ? 7 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 1,
+        label: copy.optionA ?? "选择 A",
+        color: "cinnabar" as const,
+      },
+      // B 区域：蓝色，放弃/转移型选择
+      {
+        x: scenario.id === "lifeDeath" ? 6 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 0 : 5,
+        y: scenario.id === "lifeDeath" ? 3 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 4 : 7,
+        label: copy.optionB ?? "选择 B",
+        color: "bamboo" as const,
+      },
+    ];
+    return areas.map((a) => ({ ...a, ...scaleCoord(a, boardSize) }));
+  }, [isBeginner, scenario.id, copy.optionA, copy.optionB, boardSize]);
 
   // 切关时重置
   useEffect(() => {
@@ -160,16 +194,17 @@ export default function PlayStage() {
           className="relative"
         >
           <GoBoard
-            stones={scenario.stones}
+            stones={scaledStones}
             userMove={userMove}
-            focus={scenario.focus}
+            focus={scaledFocus}
             onPlace={handlePlace}
             disabled={phase !== "play"}
             size={320}
+            boardSize={boardSize}
           />
           {/* 零基础 A/B 选项浮层 */}
           {isBeginner && phase === "play" && (
-            <OptionOverlays areas={optionAreas} />
+            <OptionOverlays areas={optionAreas} boardSize={boardSize} />
           )}
         </motion.div>
       </div>

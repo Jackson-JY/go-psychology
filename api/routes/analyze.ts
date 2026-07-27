@@ -8,7 +8,7 @@ import { mapRadarToInvestment } from "../lib/investment.js";
 import { mapRadarToCareer } from "../lib/career.js";
 import { generateHeatmap } from "../lib/heatmapData.js";
 import { generateDeepReport } from "../lib/deepReport.js";
-import { matchArchetype, mapFullRadarToCore } from "@shared/archetypes.js";
+import { matchArchetype } from "@shared/archetypes.js";
 import type { AnalyzeRequest, AnalyzeResponse } from "@shared/types";
 
 const router = Router();
@@ -45,7 +45,17 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
-  const profile = mapMovesToProfile(moves, experienceLevel);
+  // 如果 skilled 级别使用了 13x13 棋盘，将坐标归一化回 9x9 基准，便于热区匹配
+  const sourceBoardSize = experienceLevel === "skilled" ? 13 : 9;
+  const normalizedMoves = sourceBoardSize === 9
+    ? moves
+    : moves.map((m) => ({
+        ...m,
+        x: Math.round(m.x * 8 / (sourceBoardSize - 1)),
+        y: Math.round(m.y * 8 / (sourceBoardSize - 1)),
+      }));
+
+  const profile = mapMovesToProfile(normalizedMoves, experienceLevel);
 
   const mbti = mapRadarToMbti(profile.radar);
   const bigFive = mapRadarToBigFive(profile.radar);
@@ -55,7 +65,7 @@ router.post("/", async (req: Request, res: Response) => {
   const deepReport = generateDeepReport(profile.radar, experienceLevel);
 
   // 统一使用 matchArchetype 匹配原型，确保 headline 与前端原型卡片一致
-  const archetype = matchArchetype(mapFullRadarToCore(profile.radar));
+  const archetype = matchArchetype(profile.radar);
 
   let source: "deepseek" | "mock" = "mock";
   let headline: string;

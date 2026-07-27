@@ -18,7 +18,7 @@ describe("analyze flow", () => {
     assert.ok(profile.tags.length >= 4);
     assert.equal(profile.rationales.length, 4);
     assert.ok(profile.radar.riskAppetite >= 0 && profile.radar.riskAppetite <= 100);
-    assert.ok(profile.radar.bigPicture >= 0 && profile.radar.bigPicture <= 100);
+    assert.ok(profile.radar.rationality >= 0 && profile.radar.rationality <= 100);
   });
 
   it("mockComment returns different tone for beginner vs skilled", () => {

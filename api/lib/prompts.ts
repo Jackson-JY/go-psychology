@@ -16,11 +16,11 @@ const SYSTEM_PROMPT = `你是一位融合围棋哲学与行为心理学的人格
 /** 构造给 DeepSeek 的 user prompt */
 export function buildUserPrompt({ tags, radar, rationales, experienceLevel }: PromptInput): string {
   const radarLines = [
-    `沉没成本谬误：${radar.sunkCost}`,
     `风险偏好：${radar.riskAppetite}`,
-    `大局观：${radar.bigPicture}`,
-    `决断力：${radar.decisiveness}`,
-    `掌控欲：${radar.controlDesire}`,
+    `逆境抗压：${radar.resilience}`,
+    `决策理性度：${radar.rationality}`,
+    `冲突应对：${radar.conflictResponse}`,
+    `长效专注：${radar.focus}`,
   ].join("\n");
 
   const rationaleBlock = rationales.map((r, i) => `${i + 1}. ${r}`).join("\n");
