@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import type { ScenarioConfig } from "./scenarios.js";
 import { DEFAULT_SCENARIO_CONFIG } from "./scenarios.js";
 
@@ -24,5 +24,9 @@ export function loadScenarioConfig(): ScenarioConfig[] {
 
 /** 保存题目配置到 JSON 文件 */
 export function saveScenarioConfig(config: ScenarioConfig[]): void {
+  const dir = dirname(CONFIG_FILE);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
 }
