@@ -1,0 +1,249 @@
+import type { Scenario, RadarData } from "./types.js";
+
+/** 热区矩形 */
+export interface HeatRect {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+/** 雷达 5 维 key */
+export type RadarKey = keyof RadarData;
+
+/** 单关热区配置 */
+export interface HeatZone {
+  rect: HeatRect;
+  delta: Partial<Record<RadarKey, number>>;
+  rationale: string;
+}
+
+/** 完整题目配置：包含棋盘、文案、热区分析规则 */
+export interface ScenarioConfig {
+  scenario: Scenario;
+  heatmap: HeatZone[];
+}
+
+export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
+  {
+    scenario: {
+      id: "lifeDeath",
+      index: 1,
+      copy: {
+        beginner: {
+          title: "困",
+          subtitle: "困境抉择",
+          prompt: "你的一支小队被困在峡谷底部，上方有敌人重兵把守。你决定？",
+          hint: "红色区域：继续救援被困小队  ·  蓝色区域：放弃小队，另寻出路",
+          optionA: "继续救援",
+          optionB: "放弃转移",
+        },
+        skilled: {
+          title: "困",
+          subtitle: "死活困境",
+          prompt: "黑棋二路被白棋三路厚壁压制，左边已被封住。你选择？",
+          hint: "A. 继续爬二路试图突围  B. 弃子封外，在外围构筑厚势",
+        },
+      },
+      stones: [
+        { x: 1, y: 7, color: "B" as const },
+        { x: 2, y: 7, color: "B" as const },
+        { x: 3, y: 7, color: "B" as const },
+        { x: 4, y: 7, color: "B" as const },
+        { x: 0, y: 6, color: "W" as const },
+        { x: 1, y: 6, color: "W" as const },
+        { x: 2, y: 6, color: "W" as const },
+        { x: 3, y: 6, color: "W" as const },
+        { x: 4, y: 6, color: "W" as const },
+        { x: 5, y: 6, color: "W" as const },
+        { x: 0, y: 7, color: "W" as const },
+      ],
+      focus: { x: 2, y: 6 },
+    },
+    heatmap: [
+      {
+        rect: { x0: 4, y0: 6, x1: 8, y1: 8 },
+        delta: { rationality: -25, resilience: +8, conflictResponse: +5 },
+        rationale: "二路黑子已被白棋三路厚壁压制，仍继续爬二路试图突围，不愿放弃已有投入，损失厌恶显著",
+      },
+      {
+        rect: { x0: 3, y0: 0, x1: 8, y1: 5 },
+        delta: { rationality: +25, focus: +10, riskAppetite: -5 },
+        rationale: "放弃二路被压制的黑子，转而在中腹或边路开辟新战场，懂得止损、放眼全局",
+      },
+      {
+        rect: { x0: 1, y0: 4, x1: 4, y1: 5 },
+        delta: { rationality: +5, focus: -5 },
+        rationale: "既不甘心放弃二路黑子，又不敢彻底投入突围，处于观望犹豫状态",
+      },
+    ],
+  },
+  {
+    scenario: {
+      id: "opening",
+      index: 2,
+      copy: {
+        beginner: {
+          title: "始",
+          subtitle: "开局策略",
+          prompt: "面对一个全新的机会，你更想先拿到手的好处，还是先占住有利位置？",
+          hint: "红色区域：先拿到确定的好处  ·  蓝色区域：先占据中心有利位置",
+          optionA: "拿到手再说",
+          optionB: "占住中心",
+        },
+        skilled: {
+          title: "始",
+          subtitle: "布局偏好",
+          prompt: "面对全新的项目启动期，你更倾向于哪种开局策略？",
+          hint: "A. 稳扎稳打先拿实地  B. 布局宏大占据中央",
+        },
+      },
+      stones: [
+        { x: 1, y: 1, color: "B" as const },
+        { x: 1, y: 7, color: "W" as const },
+        { x: 7, y: 7, color: "B" as const },
+      ],
+    },
+    heatmap: [
+      {
+        rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
+        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
+        rationale: "选择角部巩固实地，优先追求确定性和安全感",
+      },
+      {
+        rect: { x0: 0, y0: 6, x1: 2, y1: 8 },
+        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
+        rationale: "选择角部巩固实地，优先追求确定性和安全感",
+      },
+      {
+        rect: { x0: 6, y0: 0, x1: 8, y1: 2 },
+        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
+        rationale: "选择角部巩固实地，优先追求确定性和安全感",
+      },
+      {
+        rect: { x0: 6, y0: 6, x1: 8, y1: 8 },
+        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
+        rationale: "选择角部巩固实地，优先追求确定性和安全感",
+      },
+      {
+        rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
+        delta: { riskAppetite: +25, conflictResponse: +10, focus: -5 },
+        rationale: "选择中腹高位，追求全局掌控和宏大布局，控制欲强",
+      },
+      {
+        rect: { x0: 0, y0: 3, x1: 2, y1: 5 },
+        delta: { riskAppetite: +5, rationality: +3 },
+        rationale: "选择边线发展，兼顾安全与扩张，走中间路线",
+      },
+      {
+        rect: { x0: 6, y0: 3, x1: 8, y1: 5 },
+        delta: { riskAppetite: +5, rationality: +3 },
+        rationale: "选择边线发展，兼顾安全与扩张，走中间路线",
+      },
+    ],
+  },
+  {
+    scenario: {
+      id: "invasion",
+      index: 3,
+      copy: {
+        beginner: {
+          title: "侵",
+          subtitle: "冲突应对",
+          prompt: "对方突然对你提出了不合理且带有挑衅的要求，你的第一反应是？",
+          hint: "红色区域：正面硬碰硬顶回去  ·  蓝色区域：退让一步，稳住阵脚",
+          optionA: "正面迎击",
+          optionB: "退让稳守",
+        },
+        skilled: {
+          title: "侵",
+          subtitle: "侵犯应对",
+          prompt: "对方突然对你提出了不合理且带有挑衅性质的竞争要求，你的第一反应是？",
+          hint: "A. 正面迎头痛击  B. 退让一步稳住阵脚",
+        },
+      },
+      stones: [
+        { x: 1, y: 3, color: "B" as const },
+        { x: 1, y: 4, color: "B" as const },
+        { x: 1, y: 5, color: "B" as const },
+        { x: 2, y: 3, color: "B" as const },
+        { x: 2, y: 4, color: "B" as const },
+        { x: 2, y: 5, color: "B" as const },
+        { x: 3, y: 4, color: "W" as const },
+      ],
+      focus: { x: 3, y: 4 },
+    },
+    heatmap: [
+      {
+        rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
+        delta: { conflictResponse: +25, riskAppetite: +10, rationality: -5 },
+        rationale: "面对挑衅选择正面迎击，攻击性强，冲突应对模式偏对抗",
+      },
+      {
+        rect: { x0: 0, y0: 3, x1: 2, y1: 5 },
+        delta: { conflictResponse: -20, rationality: +10, resilience: +5 },
+        rationale: "面对挑衅选择退让巩固，避免正面冲突，重视全局安定",
+      },
+      {
+        rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
+        delta: { conflictResponse: -25, riskAppetite: -10, focus: -5 },
+        rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向",
+      },
+    ],
+  },
+  {
+    scenario: {
+      id: "ko",
+      index: 4,
+      copy: {
+        beginner: {
+          title: "劫",
+          subtitle: "多线取舍",
+          prompt: "你和一个对手在争执一件小事，僵持不下。这时另一个机会出现了，你会？",
+          hint: "红色区域：继续争执到底  ·  蓝色区域：放手争议，抓住新机会",
+          optionA: "争执到底",
+          optionB: "转向新机",
+        },
+        skilled: {
+          title: "劫",
+          subtitle: "劫争转换",
+          prompt: "你与竞争对手在主战场陷入了焦灼的拉锯战，此时对方在侧翼发起了骚扰，你会？",
+          hint: "A. 紧盯主战场必须打赢  B. 避其锋芒换取侧翼开花",
+        },
+      },
+      stones: [
+        { x: 7, y: 1, color: "B" as const },
+        { x: 8, y: 1, color: "W" as const },
+        { x: 7, y: 2, color: "W" as const },
+        { x: 8, y: 2, color: "B" as const },
+        { x: 6, y: 2, color: "W" as const },
+        { x: 1, y: 6, color: "W" as const },
+        { x: 2, y: 6, color: "W" as const },
+        { x: 1, y: 7, color: "W" as const },
+        { x: 2, y: 7, color: "W" as const },
+        { x: 3, y: 6, color: "W" as const },
+        { x: 0, y: 5, color: "B" as const },
+        { x: 4, y: 8, color: "B" as const },
+      ],
+      focus: { x: 7, y: 1 },
+    },
+    heatmap: [
+      {
+        rect: { x0: 5, y0: 0, x1: 8, y1: 4 },
+        delta: { focus: -20, resilience: +10, conflictResponse: +10, rationality: -10 },
+        rationale: "紧盯主战场劫争不放，隧道视野明显，难以接受局部受损",
+      },
+      {
+        rect: { x0: 0, y0: 5, x1: 4, y1: 8 },
+        delta: { focus: +25, rationality: +10, riskAppetite: +5 },
+        rationale: "放弃主战场劫争，转而攻击侧翼，展现灵活的多任务应变能力",
+      },
+      {
+        rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
+        delta: { focus: +5, rationality: -5 },
+        rationale: "既想处理劫争又想照顾侧翼，犹豫不决，缺乏明确优先级",
+      },
+    ],
+  },
+];
+

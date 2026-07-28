@@ -4,7 +4,7 @@ import GoBoard from "@/components/GoBoard";
 import CharStream from "@/components/CharStream";
 import Seal from "@/components/Seal";
 import OptionOverlays from "@/components/OptionOverlays";
-import { SCENARIOS, useGameStore } from "@/store";
+import { useGameStore } from "@/store";
 import { analyzeMoves } from "@/lib/api";
 import type { Coord, PlacedStone } from "@/lib/types";
 
@@ -34,9 +34,10 @@ export default function PlayStage() {
     setResult,
     setError,
     experienceLevel,
+    scenarios,
   } = useGameStore();
 
-  const scenario = SCENARIOS[currentScenarioIndex];
+  const scenario = scenarios[currentScenarioIndex];
   const effectiveLevel = experienceLevel ?? "beginner";
   const copy = scenario.copy[effectiveLevel];
   const isBeginner = effectiveLevel === "beginner";
@@ -103,7 +104,7 @@ export default function PlayStage() {
     if (!coord) return;
     recordMove(scenario.id, coord.x, coord.y);
 
-    if (currentScenarioIndex < SCENARIOS.length - 1) {
+    if (currentScenarioIndex < scenarios.length - 1) {
       nextScenario();
     } else {
       useGameStore.setState({ stage: "loading" });
@@ -137,7 +138,7 @@ export default function PlayStage() {
           <Seal char={copy.title} size={32} />
           <div className="leading-tight">
             <div className="font-mono text-[10px] tracking-widest text-ink-900/50">
-              QUESTION 0{scenario.index} / 0{SCENARIOS.length}
+              QUESTION 0{scenario.index} / 0{scenarios.length}
             </div>
             <div className="font-serif text-sm font-semibold text-ink-900">
               第 {["一", "二", "三", "四"][scenario.index - 1]} 题 · {copy.subtitle}
@@ -145,7 +146,7 @@ export default function PlayStage() {
           </div>
         </div>
         <div className="flex gap-1.5">
-          {SCENARIOS.map((s, i) => (
+          {scenarios.map((s, i) => (
             <span
               key={s.id}
               className={`h-1.5 w-7 transition-colors ${
@@ -161,7 +162,7 @@ export default function PlayStage() {
         <motion.div
           className="h-full bg-cinnabar"
           initial={{ width: 0 }}
-          animate={{ width: `${(scenario.index / SCENARIOS.length) * 100}%` }}
+          animate={{ width: `${(scenario.index / scenarios.length) * 100}%` }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         />
       </div>

@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import analyzeRoutes from './routes/analyze.js'
 import analyzeSgfRoutes from './routes/analyze-sgf.js'
 import analyzeImageRoutes from './routes/analyze-image.js'
+import scenariosRoutes from './routes/scenarios.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: '5mb' }))
 app.use('/api/analyze', analyzeRoutes)
 app.use('/api/analyze-sgf', analyzeSgfRoutes)
 app.use('/api/analyze-image', analyzeImageRoutes)
+app.use('/api/scenarios', scenariosRoutes)
 
 /**
  * health

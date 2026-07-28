@@ -17,3 +17,5 @@ export type {
   DeepReport,
   MbtiData,
 } from "@shared/types";
+
+export type { ScenarioConfig, HeatZone, HeatRect } from "@shared/scenarios";

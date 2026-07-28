@@ -1,8 +1,7 @@
 import { create } from "zustand";
-import type { AnalyzeResponse, MoveRecord, PuzzleId, SgfAnalysisResponse } from "@/lib/types";
-import { SCENARIOS } from "@/lib/scenarios";
+import type { AnalyzeResponse, MoveRecord, PuzzleId, SgfAnalysisResponse, Scenario } from "@/lib/types";
 
-export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster" | "sgf-upload" | "sgf-loading" | "sgf-result";
+export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster" | "sgf-upload" | "sgf-loading" | "sgf-result" | "editor" | "editor-login";
 export type ExperienceLevel = "beginner" | "skilled";
 export type Gender = "male" | "female";
 
@@ -10,12 +9,13 @@ interface GameState {
   stage: Stage;
   experienceLevel: ExperienceLevel | null;
   gender: Gender;
-  currentScenarioIndex: number; // 0-2
+  currentScenarioIndex: number; // 0-3
   moves: MoveRecord[];
   scenarioStartTime: number;
   result: AnalyzeResponse | null;
   sgfResult: SgfAnalysisResponse | null;
   error: string | null;
+  scenarios: Scenario[];
 
   start: (level: ExperienceLevel) => void;
   startPlay: () => void;
@@ -25,9 +25,12 @@ interface GameState {
   setSgfResult: (result: SgfAnalysisResponse) => void;
   setError: (error: string | null) => void;
   setGender: (gender: Gender) => void;
+  setScenarios: (scenarios: Scenario[]) => void;
   goPoster: () => void;
   restart: () => void;
   goSgfUpload: () => void;
+  goEditor: () => void;
+  goEditorLogin: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -40,6 +43,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   result: null,
   sgfResult: null,
   error: null,
+  scenarios: [],
 
   start: (level) => {
     set({
@@ -75,7 +79,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   nextScenario: () => {
     const next = get().currentScenarioIndex + 1;
-    if (next < SCENARIOS.length) {
+    const scenarios = get().scenarios;
+    if (next < scenarios.length) {
       set({
         currentScenarioIndex: next,
         scenarioStartTime: Date.now(),
@@ -89,8 +94,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   setSgfResult: (sgfResult) => set({ stage: "sgf-result", sgfResult }),
   setError: (error) => set({ error, stage: "result" }),
   setGender: (gender) => set({ gender }),
+  setScenarios: (scenarios) => set({ scenarios }),
   goPoster: () => set({ stage: "poster" }),
   goSgfUpload: () => set({ stage: "sgf-upload", sgfResult: null, error: null }),
+  goEditor: () => set({ stage: "editor" }),
+  goEditorLogin: () => set({ stage: "editor-login" }),
   restart: () =>
     set({
       stage: "intro",
@@ -102,5 +110,3 @@ export const useGameStore = create<GameState>((set, get) => ({
       error: null,
     }),
 }));
-
-export { SCENARIOS };

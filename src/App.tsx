@@ -8,6 +8,8 @@ import ResultStage from "@/stages/ResultStage";
 import PosterStage from "@/stages/PosterStage";
 import SgfUploadStage from "@/stages/SgfUploadStage";
 import SgfResultStage from "@/stages/SgfResultStage";
+import EditorLoginStage from "@/stages/EditorLoginStage";
+import EditorStage from "@/stages/EditorStage";
 import { useGameStore } from "@/store";
 
 export default function App() {
@@ -36,6 +38,8 @@ export default function App() {
           {stage === "poster" && <PosterStage />}
           {stage === "sgf-upload" && <SgfUploadStage />}
           {stage === "sgf-result" && <SgfResultStage />}
+          {stage === "editor-login" && <EditorLoginStage />}
+          {stage === "editor" && <EditorStage />}
         </motion.div>
       </AnimatePresence>
     </div>

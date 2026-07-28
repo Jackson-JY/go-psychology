@@ -2,8 +2,8 @@ import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { motion } from "framer-motion";
 import Seal from "@/components/Seal";
-import { useGameStore, SCENARIOS } from "@/store";
-import type { MoveRecord } from "@/lib/types";
+import { useGameStore } from "@/store";
+import type { MoveRecord, Scenario } from "@/lib/types";
 
 export default function PosterStage() {
   const { result, moves, restart, experienceLevel } = useGameStore();
@@ -109,7 +109,9 @@ export default function PosterStage() {
           {/* 4 个迷你棋盘 */}
           <div className="mt-5 grid grid-cols-4 gap-2">
             {miniBoards.map((m: MoveRecord, i: number) => {
-              const scenario = SCENARIOS[i];
+              const scenarios = useGameStore.getState().scenarios;
+              const scenario = scenarios[i];
+              if (!scenario) return null;
               const copy = scenario.copy[experienceLevel ?? "skilled"];
               return (
                 <MiniBoard
@@ -231,7 +233,7 @@ function MiniBoard({
   title,
 }: {
   move: MoveRecord;
-  scenario: (typeof SCENARIOS)[number];
+  scenario: Scenario;
   title: string;
 }) {
   const N = 9;

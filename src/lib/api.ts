@@ -1,4 +1,4 @@
-import type { AnalyzeRequest, AnalyzeResponse, SgfAnalysisResponse } from "@/lib/types";
+import type { AnalyzeRequest, AnalyzeResponse, SgfAnalysisResponse, ScenarioConfig } from "@/lib/types";
 
 export async function analyzeMoves(
   moves: AnalyzeRequest["moves"],
@@ -45,4 +45,27 @@ export async function analyzeImage(
     throw new Error(err.error || `图片分析失败 (HTTP ${res.status})`);
   }
   return (await res.json()) as SgfAnalysisResponse;
+}
+
+export async function fetchScenarioConfig(): Promise<ScenarioConfig[]> {
+  const res = await fetch("/api/scenarios", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    throw new Error(`获取题目配置失败 (HTTP ${res.status})`);
+  }
+  return (await res.json()) as ScenarioConfig[];
+}
+
+export async function saveScenarioConfig(config: ScenarioConfig[], password: string): Promise<void> {
+  const res = await fetch("/api/scenarios", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ config, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `保存题目配置失败 (HTTP ${res.status})`);
+  }
 }
