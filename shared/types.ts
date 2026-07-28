@@ -155,6 +155,9 @@ export interface ScenarioCopy {
   /** A/B 选项在棋盘上的标签，仅用于零基础模式 */
   optionA?: string;
   optionB?: string;
+  /** A/B 选项在 9×9 棋盘上的提示位置，仅用于零基础模式 */
+  optionAPos?: Coord;
+  optionBPos?: Coord;
 }
 
 /** 单关残局配置 */

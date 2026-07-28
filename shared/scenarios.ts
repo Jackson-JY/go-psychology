@@ -37,6 +37,8 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "红色区域：继续救援被困小队  ·  蓝色区域：放弃小队，另寻出路",
           optionA: "继续救援",
           optionB: "放弃转移",
+          optionAPos: { x: 5, y: 7 },
+          optionBPos: { x: 6, y: 3 },
         },
         skilled: {
           title: "困",
@@ -90,6 +92,8 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "红色区域：先拿到确定的好处  ·  蓝色区域：先占据中心有利位置",
           optionA: "拿到手再说",
           optionB: "占住中心",
+          optionAPos: { x: 2, y: 2 },
+          optionBPos: { x: 4, y: 4 },
         },
         skilled: {
           title: "始",
@@ -154,6 +158,8 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "红色区域：正面硬碰硬顶回去  ·  蓝色区域：退让一步，稳住阵脚",
           optionA: "正面迎击",
           optionB: "退让稳守",
+          optionAPos: { x: 4, y: 4 },
+          optionBPos: { x: 0, y: 4 },
         },
         skilled: {
           title: "侵",
@@ -203,6 +209,8 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "红色区域：继续争执到底  ·  蓝色区域：放手争议，抓住新机会",
           optionA: "争执到底",
           optionB: "转向新机",
+          optionAPos: { x: 6, y: 1 },
+          optionBPos: { x: 5, y: 7 },
         },
         skilled: {
           title: "劫",

@@ -13,6 +13,37 @@ const RADAR_KEYS = [
   { key: "focus", label: "长效专注" },
 ] as const;
 
+const BOARD_SIZE = 9;
+const BOARD_PX = 320;
+
+function boardMetrics(size: number, boardSize: number) {
+  const padding = size / (boardSize + 1);
+  const inner = size - padding * 2;
+  const cell = inner / (boardSize - 1);
+  return { padding, inner, cell };
+}
+
+function coordToPx(c: Coord, size: number, boardSize: number) {
+  const { padding, cell } = boardMetrics(size, boardSize);
+  return {
+    left: padding + c.x * cell,
+    top: padding + c.y * cell,
+  };
+}
+
+function rectToStyle(
+  rect: HeatZone["rect"],
+  size: number,
+  boardSize: number,
+) {
+  const { padding, cell } = boardMetrics(size, boardSize);
+  const left = padding + Math.min(rect.x0, rect.x1) * cell;
+  const top = padding + Math.min(rect.y0, rect.y1) * cell;
+  const width = Math.abs(rect.x1 - rect.x0) * cell;
+  const height = Math.abs(rect.y1 - rect.y0) * cell;
+  return { left, top, width, height };
+}
+
 const EMPTY_SCENARIO: Scenario = {
   id: "lifeDeath",
   index: 0,
@@ -30,9 +61,11 @@ export default function EditorStage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [placingMode, setPlacingMode] = useState<"black" | "white" | "focus" | "area-a" | "area-b" | null>(null);
-  const [selectedArea, setSelectedArea] = useState<"area-a" | "area-b">("area-a");
+  const [placingMode, setPlacingMode] = useState<
+    "black" | "white" | "focus" | "area-a" | "area-b" | "heat" | null
+  >(null);
   const [editHeatmapIndex, setEditHeatmapIndex] = useState<number | null>(null);
+  const [heatStart, setHeatStart] = useState<Coord | null>(null);
 
   useEffect(() => {
     fetchScenarioConfig().then((cfg) => {
@@ -54,6 +87,13 @@ export default function EditorStage() {
     setConfig(next);
   };
 
+  const normalizeRect = (a: Coord, b: Coord): HeatZone["rect"] => ({
+    x0: Math.min(a.x, b.x),
+    y0: Math.min(a.y, b.y),
+    x1: Math.max(a.x, b.x),
+    y1: Math.max(a.y, b.y),
+  });
+
   const handleBoardClick = (x: number, y: number) => {
     if (!active || !placingMode) return;
     const scenario = active.scenario;
@@ -69,21 +109,48 @@ export default function EditorStage() {
         const stones = scenario.stones.filter((_, i) => i !== exists);
         updateScenario({ ...scenario, stones });
       } else {
-        const stones: PlacedStone[] = [...scenario.stones, { x, y, color: placingMode === "black" ? "B" : "W" }];
+        const stones: PlacedStone[] = [
+          ...scenario.stones,
+          { x, y, color: placingMode === "black" ? "B" : "W" },
+        ];
         updateScenario({ ...scenario, stones });
       }
       return;
     }
 
     if (placingMode === "area-a" || placingMode === "area-b") {
-      const copyKey = placingMode === "area-a" ? "optionA" : "optionB";
+      const posKey = placingMode === "area-a" ? "optionAPos" : "optionBPos";
       updateScenario({
         ...scenario,
         copy: {
           ...scenario.copy,
-          beginner: { ...scenario.copy.beginner, [copyKey]: `${x},${y}` },
+          beginner: { ...scenario.copy.beginner, [posKey]: { x, y } },
         },
       });
+      return;
+    }
+
+    if (placingMode === "heat") {
+      const end = { x, y };
+      if (!heatStart) {
+        setHeatStart(end);
+        return;
+      }
+      const rect = normalizeRect(heatStart, end);
+      if (editHeatmapIndex != null) {
+        const heatmap = active.heatmap.map((z, i) =>
+          i === editHeatmapIndex ? { ...z, rect } : z,
+        );
+        updateHeatmap(heatmap);
+      } else {
+        const heatmap = [
+          ...active.heatmap,
+          { rect, delta: {}, rationale: "" },
+        ];
+        updateHeatmap(heatmap);
+        setEditHeatmapIndex(heatmap.length - 1);
+      }
+      setHeatStart(null);
     }
   };
 
@@ -95,6 +162,8 @@ export default function EditorStage() {
     ];
     updateHeatmap(heatmap);
     setEditHeatmapIndex(heatmap.length - 1);
+    setPlacingMode("heat");
+    setHeatStart(null);
   };
 
   const handleUpdateHeatZone = (idx: number, zone: HeatZone) => {
@@ -128,19 +197,15 @@ export default function EditorStage() {
 
   const optionHints = useMemo(() => {
     if (!active) return [];
-    const a = active.scenario.copy.beginner.optionA;
-    const b = active.scenario.copy.beginner.optionB;
-    const list: Coord[] = [];
-    if (a) {
-      const [x, y] = a.split(",").map(Number);
-      if (!Number.isNaN(x) && !Number.isNaN(y)) list.push({ x, y });
-    }
-    if (b) {
-      const [x, y] = b.split(",").map(Number);
-      if (!Number.isNaN(x) && !Number.isNaN(y)) list.push({ x, y });
-    }
+    const list: { coord: Coord; label: string; color: string }[] = [];
+    const a = active.scenario.copy.beginner.optionAPos;
+    const b = active.scenario.copy.beginner.optionBPos;
+    if (a) list.push({ coord: a, label: active.scenario.copy.beginner.optionA || "A", color: "#C8392B" });
+    if (b) list.push({ coord: b, label: active.scenario.copy.beginner.optionB || "B", color: "#5A7A6B" });
     return list;
   }, [active]);
+
+  const { padding, cell } = boardMetrics(BOARD_PX, BOARD_SIZE);
 
   if (!active) {
     return (
@@ -172,7 +237,7 @@ export default function EditorStage() {
         {config.map((c, i) => (
           <button
             key={c.scenario.id + i}
-            onClick={() => { setActiveIndex(i); setEditHeatmapIndex(null); }}
+            onClick={() => { setActiveIndex(i); setEditHeatmapIndex(null); setHeatStart(null); }}
             className={`rounded-sm px-3 py-1.5 text-xs ${i === activeIndex ? "bg-ink-900 text-paper-100" : "bg-white text-ink-900 border border-ink-900/10"}`}
           >
             {c.scenario.copy.beginner.title || `第 ${i + 1} 关`}
@@ -190,10 +255,15 @@ export default function EditorStage() {
               { key: "focus", label: "焦点" },
               { key: "area-a", label: "A区提示" },
               { key: "area-b", label: "B区提示" },
+              { key: "heat", label: "热区绘制" },
             ].map((m) => (
               <button
                 key={m.key}
-                onClick={() => setPlacingMode(placingMode === (m.key as typeof placingMode) ? null : (m.key as typeof placingMode))}
+                onClick={() => {
+                  const next = placingMode === (m.key as typeof placingMode) ? null : (m.key as typeof placingMode);
+                  setPlacingMode(next);
+                  if (next !== "heat") setHeatStart(null);
+                }}
                 className={`rounded-sm px-3 py-1.5 text-xs ${placingMode === m.key ? "bg-cinnabar text-white" : "bg-ink-900/5 text-ink-900"}`}
               >
                 {m.label}
@@ -202,18 +272,86 @@ export default function EditorStage() {
           </div>
 
           <div className="flex justify-center">
-            <GoBoard
-              stones={active.scenario.stones}
-              focus={active.scenario.focus}
-              highlightAreas={optionHints}
-              onPlace={handleBoardClick}
-              size={320}
-              boardSize={9}
-            />
+            <div className="relative" style={{ width: BOARD_PX, height: BOARD_PX }}>
+              <GoBoard
+                stones={active.scenario.stones}
+                focus={active.scenario.focus}
+                highlightAreas={optionHints.map((h) => h.coord)}
+                onPlace={handleBoardClick}
+                size={BOARD_PX}
+                boardSize={BOARD_SIZE}
+              />
+              {/* 热区与 AB 提示覆盖层 */}
+              <svg
+                className="pointer-events-none absolute left-0 top-0"
+                width={BOARD_PX}
+                height={BOARD_PX}
+              >
+                {active.heatmap.map((zone, idx) => {
+                  const { left, top, width, height } = rectToStyle(zone.rect, BOARD_PX, BOARD_SIZE);
+                  const selected = editHeatmapIndex === idx;
+                  return (
+                    <g key={idx}>
+                      <rect
+                        x={left}
+                        y={top}
+                        width={width}
+                        height={height}
+                        fill={selected ? "rgba(200,57,43,0.18)" : "rgba(90,122,107,0.12)"}
+                        stroke={selected ? "rgba(200,57,43,0.6)" : "rgba(90,122,107,0.4)"}
+                        strokeWidth={selected ? 2 : 1}
+                        strokeDasharray={selected ? undefined : "4 2"}
+                      />
+                      <text
+                        x={left + 4}
+                        y={top + 14}
+                        fill={selected ? "#C8392B" : "#5A7A6B"}
+                        fontSize={10}
+                        fontFamily="monospace"
+                      >
+                        热区 {idx + 1}
+                      </text>
+                    </g>
+                  );
+                })}
+                {heatStart && (
+                  <g>
+                    {(() => {
+                      const { left, top } = coordToPx(heatStart, BOARD_PX, BOARD_SIZE);
+                      return (
+                        <>
+                          <circle cx={left} cy={top} r={cell * 0.25} fill="#C8392B" />
+                          <text x={left + 8} y={top - 8} fill="#C8392B" fontSize={10} fontFamily="monospace">
+                            起点
+                          </text>
+                        </>
+                      );
+                    })()}
+                  </g>
+                )}
+                {optionHints.map((hint, i) => {
+                  const { left, top } = coordToPx(hint.coord, BOARD_PX, BOARD_SIZE);
+                  return (
+                    <g key={i}>
+                      <circle cx={left} cy={top} r={cell * 0.35} fill={hint.color} opacity={0.8} />
+                      <text x={left + 10} y={top + 4} fill={hint.color} fontSize={10} fontFamily="monospace">
+                        {hint.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
           </div>
 
           <p className="font-mono text-[10px] text-ink-900/50">
-            点击上方模式后，在棋盘上点击以添加/移除。A/B 区提示会写入「零基础」文案的 optionA/optionB。
+            {placingMode === "heat"
+              ? heatStart
+                ? "已选起点，再点击对角完成热区矩形"
+                : "点击棋盘设置热区矩形起点"
+              : placingMode === "area-a" || placingMode === "area-b"
+                ? `点击棋盘设置 ${placingMode === "area-a" ? "A" : "B"} 提示位置`
+                : "点击上方模式后，在棋盘上点击以添加/移除。"}
           </p>
         </div>
 
@@ -280,26 +418,52 @@ export default function EditorStage() {
                   className="w-full rounded-sm border border-ink-900/10 px-2 py-1 text-sm"
                 />
                 {level === "beginner" && (
-                  <>
-                    <input
-                      value={active.scenario.copy[level].optionA || ""}
-                      onChange={(e) => updateScenario({
-                        ...active.scenario,
-                        copy: { ...active.scenario.copy, [level]: { ...active.scenario.copy[level], optionA: e.target.value } },
-                      })}
-                      placeholder="A 选项坐标（如 5,7）"
-                      className="w-full rounded-sm border border-ink-900/10 px-2 py-1 text-sm"
-                    />
-                    <input
-                      value={active.scenario.copy[level].optionB || ""}
-                      onChange={(e) => updateScenario({
-                        ...active.scenario,
-                        copy: { ...active.scenario.copy, [level]: { ...active.scenario.copy[level], optionB: e.target.value } },
-                      })}
-                      placeholder="B 选项坐标（如 6,3）"
-                      className="w-full rounded-sm border border-ink-900/10 px-2 py-1 text-sm"
-                    />
-                  </>
+                  <div className="grid gap-2 rounded-sm bg-ink-900/5 p-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="block">
+                        <span className="font-mono text-[10px] text-ink-900/50">A 标签</span>
+                        <input
+                          value={active.scenario.copy[level].optionA || ""}
+                          onChange={(e) => updateScenario({
+                            ...active.scenario,
+                            copy: { ...active.scenario.copy, [level]: { ...active.scenario.copy[level], optionA: e.target.value } },
+                          })}
+                          placeholder="如：继续救援"
+                          className="mt-1 w-full rounded-sm border border-ink-900/10 px-2 py-1 text-xs"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="font-mono text-[10px] text-ink-900/50">B 标签</span>
+                        <input
+                          value={active.scenario.copy[level].optionB || ""}
+                          onChange={(e) => updateScenario({
+                            ...active.scenario,
+                            copy: { ...active.scenario.copy, [level]: { ...active.scenario.copy[level], optionB: e.target.value } },
+                          })}
+                          placeholder="如：放弃转移"
+                          className="mt-1 w-full rounded-sm border border-ink-900/10 px-2 py-1 text-xs"
+                        />
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <PosReadout
+                        label="A 提示位置"
+                        pos={active.scenario.copy[level].optionAPos}
+                        onClear={() => updateScenario({
+                          ...active.scenario,
+                          copy: { ...active.scenario.copy, [level]: { ...active.scenario.copy[level], optionAPos: undefined } },
+                        })}
+                      />
+                      <PosReadout
+                        label="B 提示位置"
+                        pos={active.scenario.copy[level].optionBPos}
+                        onClear={() => updateScenario({
+                          ...active.scenario,
+                          copy: { ...active.scenario.copy, [level]: { ...active.scenario.copy[level], optionBPos: undefined } },
+                        })}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -342,6 +506,16 @@ export default function EditorStage() {
                           </label>
                         ))}
                       </div>
+                      <button
+                        onClick={() => {
+                          setEditHeatmapIndex(idx);
+                          setPlacingMode("heat");
+                          setHeatStart(null);
+                        }}
+                        className={`w-full rounded-sm px-2 py-1 text-[10px] ${placingMode === "heat" && editHeatmapIndex === idx ? "bg-cinnabar text-white" : "bg-ink-900/5 text-ink-900"}`}
+                      >
+                        在棋盘上绘制此热区
+                      </button>
                       <textarea
                         value={zone.rationale}
                         onChange={(e) => handleUpdateHeatZone(idx, { ...zone, rationale: e.target.value })}
@@ -384,6 +558,29 @@ export default function EditorStage() {
           </label>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PosReadout({
+  label,
+  pos,
+  onClear,
+}: {
+  label: string;
+  pos?: Coord;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-sm bg-white/60 px-2 py-1">
+      <span className="font-mono text-[10px] text-ink-900/60">
+        {label}: {pos ? `${pos.x},${pos.y}` : "未设置"}
+      </span>
+      {pos && (
+        <button onClick={onClear} className="text-[10px] text-cinnabar hover:underline">
+          清除
+        </button>
+      )}
     </div>
   );
 }

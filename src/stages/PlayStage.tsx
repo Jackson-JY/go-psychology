@@ -62,24 +62,15 @@ export default function PlayStage() {
   // 零基础模式下 A/B 选项的视觉区域提示（坐标按棋盘大小缩放）
   const optionAreas = useMemo(() => {
     if (!isBeginner) return [];
-    const areas = [
-      // A 区域：红色，继续投入/攻击型选择
-      {
-        x: scenario.id === "lifeDeath" ? 5 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 6,
-        y: scenario.id === "lifeDeath" ? 7 : scenario.id === "opening" ? 2 : scenario.id === "invasion" ? 4 : 1,
-        label: copy.optionA ?? "选择 A",
-        color: "cinnabar" as const,
-      },
-      // B 区域：蓝色，放弃/转移型选择
-      {
-        x: scenario.id === "lifeDeath" ? 6 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 0 : 5,
-        y: scenario.id === "lifeDeath" ? 3 : scenario.id === "opening" ? 4 : scenario.id === "invasion" ? 4 : 7,
-        label: copy.optionB ?? "选择 B",
-        color: "bamboo" as const,
-      },
-    ];
+    const areas: { x: number; y: number; label: string; color: "cinnabar" | "bamboo" }[] = [];
+    if (copy.optionAPos) {
+      areas.push({ ...copy.optionAPos, label: copy.optionA ?? "选择 A", color: "cinnabar" });
+    }
+    if (copy.optionBPos) {
+      areas.push({ ...copy.optionBPos, label: copy.optionB ?? "选择 B", color: "bamboo" });
+    }
     return areas.map((a) => ({ ...a, ...scaleCoord(a, boardSize) }));
-  }, [isBeginner, scenario.id, copy.optionA, copy.optionB, boardSize]);
+  }, [isBeginner, copy.optionA, copy.optionB, copy.optionAPos, copy.optionBPos, boardSize]);
 
   // 切关时重置
   useEffect(() => {
