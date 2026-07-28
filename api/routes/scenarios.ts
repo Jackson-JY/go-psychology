@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { loadScenarioConfig, saveScenarioConfig } from "@shared/config.js";
 import type { ScenarioConfig } from "@shared/scenarios.js";
+import { logEvent } from "../lib/db.js";
 
 const router = Router();
 
@@ -57,6 +58,12 @@ router.post("/", (req: Request, res: Response) => {
 
   try {
     saveScenarioConfig(config);
+    logEvent({
+      type: "scenario_save",
+      payload: { scenarioIds: config.map((c) => c.scenario.id) },
+      ip: (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() || req.ip || "",
+      userAgent: req.headers["user-agent"] as string | undefined,
+    });
     res.json({ ok: true });
   } catch (err) {
     console.error("[scenarios] 保存配置失败:", (err as Error).message);

@@ -2,16 +2,19 @@ import { motion } from "framer-motion";
 import InkParticles from "@/components/InkParticles";
 import Seal from "@/components/Seal";
 import { useGameStore, type ExperienceLevel } from "@/store";
+import { trackEvent } from "@/lib/api";
 
 export default function IntroStage() {
   const start = useGameStore((s) => s.start);
 
   const handleStart = (level: ExperienceLevel) => {
+    trackEvent("test_start", { experienceLevel: level });
     start(level);
   };
 
   const goSgfUpload = useGameStore((s) => s.goSgfUpload);
   const goEditorLogin = useGameStore((s) => s.goEditorLogin);
+  const goStats = useGameStore((s) => s.goStats);
 
   return (
     <div className="relative flex h-[100dvh] min-h-[560px] flex-col items-center overflow-hidden bg-paper-100 px-6 py-10">
@@ -120,13 +123,20 @@ export default function IntroStage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.4, duration: 0.6 }}
-          className="mt-4"
+          className="mt-4 flex items-center gap-3"
         >
           <button
             onClick={goEditorLogin}
             className="font-mono text-[10px] tracking-widest text-ink-900/30 underline hover:text-cinnabar"
           >
             管理题目
+          </button>
+          <span className="text-ink-900/20">·</span>
+          <button
+            onClick={goStats}
+            className="font-mono text-[10px] tracking-widest text-ink-900/30 underline hover:text-cinnabar"
+          >
+            数据概览
           </button>
         </motion.div>
       </main>

@@ -1,4 +1,4 @@
-import type { AnalyzeRequest, AnalyzeResponse, SgfAnalysisResponse, ScenarioConfig } from "@/lib/types";
+import type { AnalyzeRequest, AnalyzeResponse, SgfAnalysisResponse, ScenarioConfig, StatsSummary } from "@/lib/types";
 
 export async function analyzeMoves(
   moves: AnalyzeRequest["moves"],
@@ -68,4 +68,29 @@ export async function saveScenarioConfig(config: ScenarioConfig[], password: str
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `保存题目配置失败 (HTTP ${res.status})`);
   }
+}
+
+export async function trackEvent(type: string, payload?: Record<string, unknown>): Promise<void> {
+  try {
+    await fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, payload }),
+    });
+  } catch {
+    // 事件记录失败不应影响主流程
+  }
+}
+
+export async function fetchStats(password: string, days = 7): Promise<StatsSummary> {
+  const params = new URLSearchParams({ password, days: String(days) });
+  const res = await fetch(`/api/stats?${params.toString()}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `获取统计数据失败 (HTTP ${res.status})`);
+  }
+  return (await res.json()) as StatsSummary;
 }

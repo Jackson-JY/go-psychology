@@ -6,6 +6,7 @@
 import { Router, type Request, type Response } from "express";
 import { parseSgf } from "../lib/sgf.js";
 import { analyzeSgfGame } from "../lib/sgfAnalyzer.js";
+import { logEvent } from "../lib/db.js";
 
 const router = Router();
 
@@ -43,6 +44,22 @@ router.post("/", (req: Request, res: Response) => {
     const analysis = analyzeSgfGame(parsed, color);
 
     // 返回结果
+    try {
+      logEvent({
+        type: "sgf_analyze",
+        payload: {
+          moveCount: analysis.moveCount,
+          boardSize: analysis.boardSize,
+          analyzedColor: color,
+          tags: analysis.tags,
+        },
+        ip: (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() || req.ip || "",
+        userAgent: req.headers["user-agent"] as string | undefined,
+      });
+    } catch (logErr) {
+      console.error("[analyze-sgf] 记录事件失败:", (logErr as Error).message);
+    }
+
     res.json({
       ...analysis,
       analyzedColor: color,

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Seal from "@/components/Seal";
 import { useGameStore } from "@/store";
 import type { MoveRecord, Scenario } from "@/lib/types";
+import { trackEvent } from "@/lib/api";
 
 export default function PosterStage() {
   const { result, moves, restart, experienceLevel } = useGameStore();
@@ -35,6 +36,10 @@ export default function PosterStage() {
       const url = canvas.toDataURL("image/png");
       setImgUrl(url);
       setStatus("done");
+      trackEvent("poster_generate", {
+        headline: result.headline,
+        experienceLevel: experienceLevel ?? "beginner",
+      });
     } catch (err) {
       console.error(err);
       setStatus("idle");
@@ -48,6 +53,10 @@ export default function PosterStage() {
     a.href = imgUrl;
     a.download = `黑白潜意识-${Date.now()}.png`;
     a.click();
+    trackEvent("poster_download", {
+      headline: result.headline,
+      experienceLevel: experienceLevel ?? "beginner",
+    });
   };
 
   return (

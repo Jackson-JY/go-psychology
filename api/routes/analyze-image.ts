@@ -12,6 +12,7 @@ import {
 } from "../lib/vision.js";
 import { parseSgf } from "../lib/sgf.js";
 import { analyzeSgfGame } from "../lib/sgfAnalyzer.js";
+import { logEvent } from "../lib/db.js";
 
 const router = Router();
 
@@ -77,6 +78,23 @@ router.post("/", async (req: Request, res: Response) => {
 
     // 执行分析（按选定颜色视角）
     const analysis = analyzeSgfGame(parsed, color);
+
+    try {
+      logEvent({
+        type: "image_analyze",
+        payload: {
+          moveCount: analysis.moveCount,
+          boardSize: analysis.boardSize,
+          analyzedColor: color,
+          source: hasVisionKey() ? "vision" : "mock",
+          tags: analysis.tags,
+        },
+        ip: (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() || req.ip || "",
+        userAgent: req.headers["user-agent"] as string | undefined,
+      });
+    } catch (logErr) {
+      console.error("[analyze-image] 记录事件失败:", (logErr as Error).message);
+    }
 
     res.json({
       ...analysis,

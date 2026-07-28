@@ -10,6 +10,7 @@ import { generateHeatmap } from "../lib/heatmapData.js";
 import { generateDeepReport } from "../lib/deepReport.js";
 import { matchArchetype } from "@shared/archetypes.js";
 import type { AnalyzeRequest, AnalyzeResponse } from "@shared/types";
+import { logEvent } from "../lib/db.js";
 
 const router = Router();
 
@@ -106,6 +107,23 @@ router.post("/", async (req: Request, res: Response) => {
     heatmap,
     deepReport,
   };
+
+  try {
+    logEvent({
+      type: "test_complete",
+      payload: {
+        experienceLevel: experienceLevel ?? "beginner",
+        radar: profile.radar,
+        tags: profile.tags,
+        headline,
+        source,
+      },
+      ip: (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() || req.ip || "",
+      userAgent: req.headers["user-agent"] as string | undefined,
+    });
+  } catch (err) {
+    console.error("[analyze] 记录事件失败:", (err as Error).message);
+  }
 
   res.json(response);
 });

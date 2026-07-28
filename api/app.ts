@@ -15,6 +15,9 @@ import analyzeRoutes from './routes/analyze.js'
 import analyzeSgfRoutes from './routes/analyze-sgf.js'
 import analyzeImageRoutes from './routes/analyze-image.js'
 import scenariosRoutes from './routes/scenarios.js'
+import eventsRoutes from './routes/events.js'
+import statsRoutes from './routes/stats.js'
+import { logAccess } from './lib/db.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -29,6 +32,35 @@ app.use(cors())
 app.use(express.json({ limit: '5mb' }))
 app.use(express.urlencoded({ extended: true, limit: '5mb' }))
 
+// HTTP 访问日志中间件
+app.use((req: Request, res: Response, next: NextFunction): void => {
+  const start = Date.now()
+  const clientIp =
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() ||
+    req.socket.remoteAddress ||
+    ''
+  const userAgent = req.headers['user-agent'] as string | undefined
+  const referer = req.headers['referer'] as string | undefined
+
+  res.on('finish', () => {
+    try {
+      logAccess({
+        ip: clientIp,
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        userAgent,
+        referer,
+        responseTimeMs: Date.now() - start,
+      })
+    } catch (err) {
+      console.error('[access-log] error:', err)
+    }
+  })
+
+  next()
+})
+
 /**
  * API Routes
  */
@@ -36,6 +68,8 @@ app.use('/api/analyze', analyzeRoutes)
 app.use('/api/analyze-sgf', analyzeSgfRoutes)
 app.use('/api/analyze-image', analyzeImageRoutes)
 app.use('/api/scenarios', scenariosRoutes)
+app.use('/api/events', eventsRoutes)
+app.use('/api/stats', statsRoutes)
 
 /**
  * health

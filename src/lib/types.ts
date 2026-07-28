@@ -19,3 +19,4 @@ export type {
 } from "@shared/types";
 
 export type { ScenarioConfig, HeatZone, HeatRect } from "@shared/scenarios";
+export type { StatsSummary } from "@shared/stats";
