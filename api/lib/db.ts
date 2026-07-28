@@ -1,52 +1,9 @@
-import Database from "better-sqlite3";
-import { resolve, dirname } from "node:path";
-import { existsSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import type { StatsSummary, DailyStat, EventTypeStat } from "@shared/stats.js";
 
 const DB_DIR = resolve(process.cwd(), "data");
-const DB_PATH = resolve(DB_DIR, "analytics.db");
-
-function ensureDir(path: string) {
-  if (!existsSync(path)) {
-    mkdirSync(path, { recursive: true });
-  }
-}
-
-ensureDir(DB_DIR);
-
-const db = new Database(DB_PATH);
-db.pragma("journal_mode = WAL");
-
-// 访问日志表
-db.exec(`
-  CREATE TABLE IF NOT EXISTS access_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ip TEXT,
-    method TEXT,
-    path TEXT,
-    status_code INTEGER,
-    user_agent TEXT,
-    referer TEXT,
-    response_time_ms INTEGER,
-    created_at INTEGER DEFAULT (unixepoch())
-  );
-  CREATE INDEX IF NOT EXISTS idx_access_created_at ON access_logs(created_at);
-  CREATE INDEX IF NOT EXISTS idx_access_path ON access_logs(path);
-`);
-
-// 行为事件表
-db.exec(`
-  CREATE TABLE IF NOT EXISTS events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT NOT NULL,
-    payload TEXT,
-    ip TEXT,
-    user_agent TEXT,
-    created_at INTEGER DEFAULT (unixepoch())
-  );
-  CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
-  CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
-`);
+const DB_PATH = resolve(DB_DIR, "analytics.json");
 
 export interface AccessLogInput {
   ip: string;
@@ -58,6 +15,11 @@ export interface AccessLogInput {
   responseTimeMs: number;
 }
 
+interface AccessLog extends AccessLogInput {
+  id: number;
+  createdAt: number;
+}
+
 export interface EventInput {
   type: string;
   payload?: Record<string, unknown>;
@@ -65,98 +27,143 @@ export interface EventInput {
   userAgent?: string;
 }
 
+interface EventRecord extends EventInput {
+  id: number;
+  createdAt: number;
+}
+
+interface AnalyticsData {
+  accessLogs: AccessLog[];
+  events: EventRecord[];
+}
+
+let nextId = 1;
+
+function ensureDir(path: string) {
+  if (!existsSync(path)) {
+    mkdirSync(path, { recursive: true });
+  }
+}
+
+function loadData(): AnalyticsData {
+  ensureDir(DB_DIR);
+  if (!existsSync(DB_PATH)) {
+    return { accessLogs: [], events: [] };
+  }
+  try {
+    const raw = readFileSync(DB_PATH, "utf-8");
+    const parsed = JSON.parse(raw) as AnalyticsData;
+    return {
+      accessLogs: Array.isArray(parsed.accessLogs) ? parsed.accessLogs : [],
+      events: Array.isArray(parsed.events) ? parsed.events : [],
+    };
+  } catch (err) {
+    console.error("[json-db] 加载分析数据失败:", (err as Error).message);
+    return { accessLogs: [], events: [] };
+  }
+}
+
+function saveData(data: AnalyticsData): void {
+  ensureDir(DB_DIR);
+  writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+}
+
+let data = loadData();
+
+function recalcNextId() {
+  const maxAccess = data.accessLogs.reduce((m, l) => Math.max(m, l.id || 0), 0);
+  const maxEvent = data.events.reduce((m, e) => Math.max(m, e.id || 0), 0);
+  nextId = Math.max(maxAccess, maxEvent) + 1;
+}
+
+recalcNextId();
+
 export function logAccess(input: AccessLogInput): void {
-  const stmt = db.prepare(`
-    INSERT INTO access_logs (ip, method, path, status_code, user_agent, referer, response_time_ms)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-  stmt.run(
-    input.ip,
-    input.method,
-    input.path,
-    input.statusCode,
-    input.userAgent ?? null,
-    input.referer ?? null,
-    input.responseTimeMs,
-  );
+  data.accessLogs.push({
+    ...input,
+    id: nextId++,
+    createdAt: Math.floor(Date.now() / 1000),
+  });
+  saveData(data);
 }
 
 export function logEvent(input: EventInput): void {
-  const stmt = db.prepare(`
-    INSERT INTO events (type, payload, ip, user_agent)
-    VALUES (?, ?, ?, ?)
-  `);
-  stmt.run(
-    input.type,
-    input.payload ? JSON.stringify(input.payload) : null,
-    input.ip ?? null,
-    input.userAgent ?? null,
-  );
+  data.events.push({
+    ...input,
+    id: nextId++,
+    createdAt: Math.floor(Date.now() / 1000),
+  });
+  saveData(data);
+}
+
+function formatLocalDate(tsSec: number): string {
+  const d = new Date(tsSec * 1000);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function getStats(days = 7): StatsSummary {
-  const totalAccess = (db.prepare("SELECT COUNT(*) AS c FROM access_logs").get() as { c: number }).c;
-  const totalEvents = (db.prepare("SELECT COUNT(*) AS c FROM events").get() as { c: number }).c;
+  const totalAccess = data.accessLogs.length;
+  const totalEvents = data.events.length;
 
+  const nowSec = Math.floor(Date.now() / 1000);
   const todayStart = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
   const todayEnd = todayStart + 86400;
-  const todayRow = db
-    .prepare(
-      "SELECT COUNT(*) AS pv, COUNT(DISTINCT ip) AS uv FROM access_logs WHERE created_at >= ? AND created_at < ?",
-    )
-    .get(todayStart, todayEnd) as { pv: number; uv: number };
+  const cutoff = nowSec - days * 86400;
 
-  const dailyRows = db
-    .prepare(
-      `
-      SELECT date(created_at, 'unixepoch', 'localtime') AS date,
-             COUNT(*) AS pv,
-             COUNT(DISTINCT ip) AS uv
-      FROM access_logs
-      WHERE created_at >= unixepoch('now', '-' || ? || ' days')
-      GROUP BY date
-      ORDER BY date DESC
-    `,
-    )
-    .all(days) as DailyStat[];
+  const todayAccess = data.accessLogs.filter(
+    (l) => l.createdAt >= todayStart && l.createdAt < todayEnd,
+  );
+  const todayPv = todayAccess.length;
+  const todayUv = new Set(todayAccess.map((l) => l.ip)).size;
 
-  const eventRows = db
-    .prepare(
-      `
-      SELECT type, COUNT(*) AS count
-      FROM events
-      WHERE created_at >= unixepoch('now', '-' || ? || ' days')
-      GROUP BY type
-      ORDER BY count DESC
-    `,
-    )
-    .all(days) as EventTypeStat[];
+  const dailyMap = new Map<string, { pv: number; ips: Set<string> }>();
+  for (const log of data.accessLogs) {
+    if (log.createdAt < cutoff) continue;
+    const date = formatLocalDate(log.createdAt);
+    const entry = dailyMap.get(date) || { pv: 0, ips: new Set<string>() };
+    entry.pv += 1;
+    entry.ips.add(log.ip);
+    dailyMap.set(date, entry);
+  }
+  const daily: DailyStat[] = Array.from(dailyMap.entries())
+    .map(([date, entry]) => ({ date, pv: entry.pv, uv: entry.ips.size }))
+    .sort((a, b) => (a.date > b.date ? -1 : 1));
 
-  const recentRows = db
-    .prepare(
-      `
-      SELECT id, type, payload, ip, created_at AS createdAt
-      FROM events
-      ORDER BY created_at DESC
-      LIMIT 50
-    `,
-    )
-    .all() as { id: number; type: string; payload: string | null; ip: string | null; createdAt: number }[];
+  const eventCounts = new Map<string, number>();
+  for (const e of data.events) {
+    if (e.createdAt < cutoff) continue;
+    eventCounts.set(e.type, (eventCounts.get(e.type) || 0) + 1);
+  }
+  const events: EventTypeStat[] = Array.from(eventCounts.entries())
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const recentEvents = data.events
+    .slice()
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 50)
+    .map((r) => ({
+      id: r.id,
+      type: r.type,
+      payload: r.payload ?? null,
+      ip: r.ip ?? null,
+      createdAt: r.createdAt,
+    }));
 
   return {
     totalAccess,
     totalEvents,
-    todayPv: todayRow.pv,
-    todayUv: todayRow.uv,
-    daily: dailyRows,
-    events: eventRows,
-    recentEvents: recentRows.map((r) => ({
-      ...r,
-      payload: r.payload ? (JSON.parse(r.payload) as Record<string, unknown>) : null,
-    })),
+    todayPv,
+    todayUv,
+    daily,
+    events,
+    recentEvents,
   };
 }
 
 export function closeDb(): void {
-  db.close();
+  // no-op for JSON storage
 }
