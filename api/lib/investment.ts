@@ -1,4 +1,4 @@
-import type { RadarData, InvestmentStyle } from "@shared/types";
+import type { RadarData } from "@shared/types";
 
 interface InvestmentResult {
   type: string;

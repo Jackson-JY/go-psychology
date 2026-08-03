@@ -4,7 +4,11 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": false,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "baseUrl": "./",
     "paths": {
       "@shared/*": ["./shared/*"]

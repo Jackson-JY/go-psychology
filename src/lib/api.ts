@@ -83,10 +83,10 @@ export async function trackEvent(type: string, payload?: Record<string, unknown>
 }
 
 export async function fetchStats(password: string, days = 7): Promise<StatsSummary> {
-  const params = new URLSearchParams({ password, days: String(days) });
-  const res = await fetch(`/api/stats?${params.toString()}`, {
-    method: "GET",
+  const res = await fetch("/api/stats", {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, days }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

@@ -44,11 +44,12 @@ export default function GoBoard({
   onPlace,
   disabled = false,
   size = 320,
-  showHint = false,
+  showHint: _showHint = false,
   boardSize = 9,
 }: GoBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [ripple, setRipple] = useState<{ x: number; y: number; t: number } | null>(null);
+  /** 用于触发 CSS 波纹渲染的 key，只在落子时变化 */
+  const [ripple, setRipple] = useState<{ x: number; y: number; key: number } | null>(null);
 
   const BOARD_N = boardSize;
   const STAR_POINTS = getStarPoints(BOARD_N);
@@ -167,33 +168,7 @@ export default function GoBoard({
       ctx.arc(px, py, cellSize * 0.12, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    if (ripple) {
-      const elapsed = (performance.now() - ripple.t) / 600;
-      if (elapsed < 1) {
-        const { px, py } = toPx({ x: ripple.x, y: ripple.y });
-        const r = cellSize * 0.5 + elapsed * cellSize * 1.6;
-        ctx.strokeStyle = `rgba(10,10,10,${0.5 * (1 - elapsed)})`;
-        ctx.lineWidth = 2 * (1 - elapsed);
-        ctx.beginPath();
-        ctx.arc(px, py, r, 0, Math.PI * 2);
-        ctx.stroke();
-      } else {
-        setRipple(null);
-      }
-    }
-  }, [size, padding, inner, cellSize, stones, userMove, focus, highlightAreas, ripple, toPx, disabled]);
-
-  useEffect(() => {
-    if (!ripple) return;
-    let raf = 0;
-    const tick = () => {
-      setRipple((prev) => (prev ? { ...prev } : prev));
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [ripple]);
+  }, [size, padding, inner, cellSize, BOARD_N, STAR_POINTS, stones, userMove, focus, highlightAreas, toPx]);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (disabled) return;
@@ -205,21 +180,11 @@ export default function GoBoard({
     const cx = (e.clientX - rect.left) * scaleX;
     const cy = (e.clientY - rect.top) * scaleY;
 
-    let best: { x: number; y: number; dist: number } | null = null;
-    for (let y = 0; y < BOARD_N; y++) {
-      for (let x = 0; x < BOARD_N; x++) {
-        const { px, py } = toPx({ x, y });
-        const d = Math.hypot(cx - px, cy - py);
-        if (!best || d < best.dist) {
-          best = { x, y, dist: d };
-        }
-      }
-    }
-    if (!best) return;
-    if (best.dist > cellSize * 0.8) return;
+    const nearest = findNearestPoint(cx, cy);
+    if (!nearest) return;
 
-    setRipple({ x: best.x, y: best.y, t: performance.now() });
-    onPlace(best.x, best.y);
+    setRipple({ x: nearest.x, y: nearest.y, key: Date.now() });
+    onPlace(nearest.x, nearest.y);
   };
 
   return (
@@ -237,6 +202,28 @@ export default function GoBoard({
         }}
         className="rounded-sm"
       />
+      {ripple && (
+        <span
+          key={ripple.key}
+          className="pointer-events-none absolute rounded-full border border-ink-900/30"
+          style={{
+            left: padding + ripple.x * cellSize,
+            top: padding + ripple.y * cellSize,
+            width: cellSize,
+            height: cellSize,
+            transform: "translate(-50%, -50%) scale(0)",
+            animation: "go-board-ripple 600ms ease-out forwards",
+          }}
+        />
+      )}
+      <style>{`
+        @keyframes go-board-ripple {
+          to {
+            transform: translate(-50%, -50%) scale(2.6);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }

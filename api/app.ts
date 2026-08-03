@@ -18,6 +18,7 @@ import scenariosRoutes from './routes/scenarios.js'
 import eventsRoutes from './routes/events.js'
 import statsRoutes from './routes/stats.js'
 import { logAccess } from './lib/db.js'
+import { createRateLimit, cleanupRateLimitBuckets } from './lib/rateLimit.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -28,9 +29,19 @@ dotenv.config()
 
 const app: express.Application = express()
 
+// 信任代理层（Nginx），使 req.ip 能正确反映真实客户端地址
+app.set('trust proxy', true)
+
 app.use(cors())
 app.use(express.json({ limit: '5mb' }))
 app.use(express.urlencoded({ extended: true, limit: '5mb' }))
+
+// 全局写操作限流：每 IP 每分钟 10 次
+const globalRateLimit = createRateLimit({ maxRequests: 10, windowMs: 60_000 })
+app.use(globalRateLimit)
+
+// 每 5 分钟清理一次过期限流桶
+setInterval(() => cleanupRateLimitBuckets(), 5 * 60_000)
 
 // HTTP 访问日志中间件
 app.use((req: Request, res: Response, next: NextFunction): void => {
@@ -76,7 +87,7 @@ app.use('/api/stats', statsRoutes)
  */
 app.use(
   '/api/health',
-  (req: Request, res: Response, next: NextFunction): void => {
+  (_req: Request, res: Response, _next: NextFunction): void => {
     res.status(200).json({
       success: true,
       message: 'ok',
@@ -92,14 +103,14 @@ app.use(express.static(path.join(__dirname, '../dist')))
 /**
  * SPA 路由回退
  */
-app.get('/*', (req: Request, res: Response) => {
+app.get('/*', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'))
 })
 
 /**
  * error handler middleware
  */
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('[server] error:', error)
   res.status(500).json({
     success: false,

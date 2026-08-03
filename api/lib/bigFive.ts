@@ -1,4 +1,4 @@
-import type { RadarData, BigFiveData } from "@shared/types";
+import type { RadarData } from "@shared/types";
 
 interface BigFiveResult {
   openness: number;

@@ -258,6 +258,50 @@ export default function ResultStage() {
             重新测试
           </button>
         </motion.div>
+
+        {/* 支持作者 */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.8, duration: 0.8 }}
+          className="px-5 pb-10"
+        >
+          <div className="rounded-lg border border-ink-900/8 bg-paper-200/60 p-5">
+            <div className="mb-1 text-center">
+              <div className="font-mono text-[10px] tracking-[0.3em] text-ink-900/40">
+                SUPPORT · 连接作者
+              </div>
+              <p className="mt-2 font-kai text-[13px] leading-relaxed text-ink-900/60">
+                如果这次测写触动了你，
+                <br />
+                可以请作者喝杯茶 ☕
+                <br />
+                <span className="text-[11px] text-ink-900/40">
+                  用于服务器维护与接入 KataGo / DeepSeek 更精准分析
+                </span>
+              </p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="flex flex-col items-center">
+                <img
+                  src="/receive.jpg"
+                  alt="赞赏码"
+                  className="h-32 w-32 rounded-md border border-ink-900/10 object-contain bg-white"
+                />
+                <span className="mt-2 font-kai text-[11px] text-ink-900/50">赞赏支持</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <img
+                  src="/weixin.png"
+                  alt="微信二维码"
+                  className="h-32 w-32 rounded-md border border-ink-900/10 object-contain bg-white"
+                />
+                <span className="mt-2 font-kai text-[11px] text-ink-900/50">加好友 · 进群</span>
+              </div>
+            </div>
+          </div>
+        </motion.section>
       </motion.div>
     </div>
   );

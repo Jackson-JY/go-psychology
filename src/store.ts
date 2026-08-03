@@ -104,11 +104,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   restart: () =>
     set({
       stage: "intro",
+      experienceLevel: null,
       currentScenarioIndex: 0,
       moves: [],
       scenarioStartTime: 0,
       result: null,
       sgfResult: null,
       error: null,
+      // 保留 gender 与 scenarios（用户偏好与已加载配置）
     }),
 }));

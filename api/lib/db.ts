@@ -5,6 +5,11 @@ import type { StatsSummary, DailyStat, EventTypeStat } from "@shared/stats.js";
 const DB_DIR = resolve(process.cwd(), "data");
 const DB_PATH = resolve(DB_DIR, "analytics.json");
 
+/** 写盘间隔（毫秒） */
+const FLUSH_INTERVAL_MS = 5_000;
+/** 内存缓冲条数上限，超过立即刷盘 */
+const BUFFER_LIMIT = 100;
+
 export interface AccessLogInput {
   ip: string;
   method: string;
@@ -38,6 +43,8 @@ interface AnalyticsData {
 }
 
 let nextId = 1;
+let pendingWrites = 0;
+let flushTimer: NodeJS.Timeout | null = null;
 
 function ensureDir(path: string) {
   if (!existsSync(path)) {
@@ -78,13 +85,36 @@ function recalcNextId() {
 
 recalcNextId();
 
+function scheduleFlush(): void {
+  if (flushTimer) return;
+  flushTimer = setTimeout(() => {
+    flushTimer = null;
+    flush();
+  }, FLUSH_INTERVAL_MS);
+}
+
+function flush(): void {
+  if (pendingWrites === 0) return;
+  pendingWrites = 0;
+  try {
+    saveData(data);
+  } catch (err) {
+    console.error("[json-db] 刷盘失败:", (err as Error).message);
+  }
+}
+
 export function logAccess(input: AccessLogInput): void {
   data.accessLogs.push({
     ...input,
     id: nextId++,
     createdAt: Math.floor(Date.now() / 1000),
   });
-  saveData(data);
+  pendingWrites += 1;
+  if (pendingWrites >= BUFFER_LIMIT) {
+    flush();
+  } else {
+    scheduleFlush();
+  }
 }
 
 export function logEvent(input: EventInput): void {
@@ -93,7 +123,21 @@ export function logEvent(input: EventInput): void {
     id: nextId++,
     createdAt: Math.floor(Date.now() / 1000),
   });
-  saveData(data);
+  pendingWrites += 1;
+  if (pendingWrites >= BUFFER_LIMIT) {
+    flush();
+  } else {
+    scheduleFlush();
+  }
+}
+
+/** 强制立即写入磁盘（用于优雅退出前） */
+export function flushSync(): void {
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+  flush();
 }
 
 function formatLocalDate(tsSec: number): string {

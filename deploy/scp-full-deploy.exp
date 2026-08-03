@@ -13,7 +13,7 @@ expect {
   eof {}
 }
 
-# 2. SSH 解压并部署
+# 2. SSH：备份数据 → 解压部署 → 恢复数据
 spawn ssh -o StrictHostKeyChecking=no root@$host
 expect {
   "password:" {
@@ -23,21 +23,48 @@ expect {
   "# " {}
 }
 
-send "rm -rf /var/www/go-psychology && mkdir -p /var/www/go-psychology\r"
+# 备份 data/、logs/ 和 .env（注意 Tcl 中 [] 要转义）
+send "rm -rf /tmp/go-psy-backup && mkdir -p /tmp/go-psy-backup\r"
+expect "# "
+send "if \\[ -d /var/www/go-psychology/data \\]; then cp -a /var/www/go-psychology/data /tmp/go-psy-backup/data; fi\r"
+expect "# "
+send "if \\[ -d /var/www/go-psychology/logs \\]; then cp -a /var/www/go-psychology/logs /tmp/go-psy-backup/logs; fi\r"
+expect "# "
+send "if \\[ -f /var/www/go-psychology/.env \\]; then cp /var/www/go-psychology/.env /tmp/go-psy-backup/.env; fi\r"
 expect "# "
 
+# 清除旧目录并解压新代码
+send "rm -rf /var/www/go-psychology && mkdir -p /var/www/go-psychology\r"
+expect "# "
 send "tar -xzf /tmp/go-psychology.tar.gz -C /var/www/go-psychology\r"
 expect "# "
 
+# 恢复数据
+send "mkdir -p /var/www/go-psychology/data /var/www/go-psychology/logs\r"
+expect "# "
+send "if \\[ -d /tmp/go-psy-backup/data \\]; then cp -a /tmp/go-psy-backup/data/* /var/www/go-psychology/data/ 2>/dev/null; fi\r"
+expect "# "
+send "if \\[ -d /tmp/go-psy-backup/logs \\]; then cp -a /tmp/go-psy-backup/logs/* /var/www/go-psychology/logs/ 2>/dev/null; fi\r"
+expect "# "
+
+# 恢复 .env；若不存在则创建默认环境变量
+send "if \\[ -f /tmp/go-psy-backup/.env \\]; then cp /tmp/go-psy-backup/.env /var/www/go-psychology/.env; fi\r"
+expect "# "
+send "if \\[ ! -f /var/www/go-psychology/.env \\]; then printf 'EDITOR_PASSWORD=%s\\n' '$password' > /var/www/go-psychology/.env; fi\r"
+expect "# "
+
+# 安装依赖 + 构建
 send "cd /var/www/go-psychology && npm install\r"
 expect "# "
 
 send "npm run build\r"
 expect "# "
 
+# 重启服务
 send "pm2 delete go-psychology-api 2>/dev/null; pm2 start ecosystem.config.cjs; pm2 save\r"
 expect "# "
 
+# 重载 Nginx
 send "cp deploy/nginx.conf /etc/nginx/sites-available/go-psychology && nginx -t && systemctl reload nginx\r"
 expect "# "
 

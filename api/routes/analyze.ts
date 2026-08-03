@@ -14,28 +14,7 @@ import { logEvent } from "../lib/db.js";
 
 const router = Router();
 
-const rateBuckets = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 60_000;
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const bucket = rateBuckets.get(ip);
-  if (!bucket || bucket.resetAt < now) {
-    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
-  }
-  bucket.count += 1;
-  return bucket.count > RATE_LIMIT;
-}
-
 router.post("/", async (req: Request, res: Response) => {
-  const ip = (req.headers["x-forwarded-for"] as string) || req.ip || "unknown";
-  if (rateLimited(ip)) {
-    res.status(429).json({ error: "请求过于频繁，请稍后再试" });
-    return;
-  }
-
   const { moves, experienceLevel } = req.body as AnalyzeRequest;
   if (!Array.isArray(moves) || moves.length === 0) {
     res.status(400).json({ error: "缺少 moves 数据" });

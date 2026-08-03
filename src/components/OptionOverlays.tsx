@@ -37,14 +37,13 @@ export default function OptionOverlays({ areas, size = 320, boardSize = 9 }: Opt
         return (
           <motion.div
             key={area.label}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.8, x: "-50%", y: "-50%" }}
+            animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
             transition={{ delay: 0.4 + i * 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="absolute flex flex-col items-center"
             style={{
               left,
               top,
-              transform: "translate(-50%, -50%)",
             }}
           >
             <div

@@ -24,9 +24,7 @@ export default function PosterStage() {
     setStatus("generating");
     try {
       // 等字体加载
-      if ((document as Document).fonts?.ready) {
-        await (document as Document).fonts.ready;
-      }
+      await (document as Document).fonts.ready;
       const canvas = await html2canvas(posterRef.current, {
         scale: 2,
         backgroundColor: "#F5F1E8",
@@ -128,6 +126,7 @@ export default function PosterStage() {
                   move={m}
                   scenario={scenario}
                   title={copy.title}
+                  level={experienceLevel ?? "beginner"}
                 />
               );
             })}
@@ -240,12 +239,14 @@ function MiniBoard({
   move,
   scenario,
   title,
+  level,
 }: {
   move: MoveRecord;
   scenario: Scenario;
   title: string;
+  level: "beginner" | "skilled";
 }) {
-  const N = 9;
+  const N = level === "skilled" ? 13 : 9;
   const size = 80;
   const padding = 6;
   const inner = size - padding * 2;
@@ -254,6 +255,7 @@ function MiniBoard({
     px: padding + x * cell,
     py: padding + y * cell,
   });
+  const board = scenario.boards[level];
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -289,7 +291,7 @@ function MiniBoard({
           ))}
         </g>
         {/* 预设棋子 */}
-        {scenario.stones.map((s, i) => {
+        {board.stones.map((s, i) => {
           const { px, py } = toPx(s.x, s.y);
           return (
             <circle

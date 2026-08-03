@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import GoBoard from "@/components/GoBoard";
 import Seal from "@/components/Seal";
 import { useGameStore } from "@/store";
-import type { Coord, PlacedStone, StoneColor } from "@/lib/types";
+import type { Coord, StoneColor } from "@/lib/types";
 
 type TutorialStep = 1 | 2;
 
@@ -95,7 +95,7 @@ export default function TutorialStage() {
 
     if (currentStep === 2) {
       const target = (step as typeof TUTORIAL_STEPS[1]).targetMove;
-      if (x !== target.x || y !== target.y) {
+      if (!target || x !== target.x || y !== target.y) {
         return;
       }
     }

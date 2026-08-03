@@ -1,14 +1,24 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import InkParticles from "@/components/InkParticles";
 import Seal from "@/components/Seal";
 import { useGameStore, type ExperienceLevel } from "@/store";
-import { trackEvent } from "@/lib/api";
+import { trackEvent, fetchScenarioConfig } from "@/lib/api";
 
 export default function IntroStage() {
   const start = useGameStore((s) => s.start);
+  const setScenarios = useGameStore((s) => s.setScenarios);
+  const [loading, setLoading] = useState(false);
 
-  const handleStart = (level: ExperienceLevel) => {
+  const handleStart = async (level: ExperienceLevel) => {
+    setLoading(true);
     trackEvent("test_start", { experienceLevel: level });
+    try {
+      const config = await fetchScenarioConfig();
+      setScenarios(config.map((c) => c.scenario));
+    } catch {
+      // 加载失败也继续，PlayStage 有空数组保护
+    }
     start(level);
   };
 
@@ -89,13 +99,15 @@ export default function IntroStage() {
           </p>
           <button
             onClick={() => handleStart("beginner")}
-            className="btn-ink !px-6 !py-3 text-sm"
+            disabled={loading}
+            className="btn-ink !px-6 !py-3 text-sm disabled:opacity-50"
           >
-            从未下过围棋 →
+            {loading ? "加载中..." : "从未下过围棋 →"}
           </button>
           <button
             onClick={() => handleStart("skilled")}
-            className="rounded-sm border border-ink-900/20 bg-paper-100 px-6 py-3 font-kai text-sm text-ink-900 transition-colors hover:bg-ink-900 hover:text-paper-100"
+            disabled={loading}
+            className="rounded-sm border border-ink-900/20 bg-paper-100 px-6 py-3 font-kai text-sm text-ink-900 transition-colors hover:bg-ink-900 hover:text-paper-100 disabled:opacity-50"
           >
             了解围棋基本规则 →
           </button>

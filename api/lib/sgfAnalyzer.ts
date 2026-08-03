@@ -429,14 +429,13 @@ function analyzeConflict(
  * 分析棋局前后期的落子"目的性"变化
  * 简化：后期是否出现更多远离双方棋子的"无目的落子"
  */
-function analyzeFocus(moves: SgfMove[], boardSize: number, analyzedColor: "B" | "W"): number {
+function analyzeFocus(moves: SgfMove[], _boardSize: number, analyzedColor: "B" | "W"): number {
   // 提取被分析方的落子
   const myMoves = moves.filter((m) => m.color === analyzedColor);
   if (myMoves.length < 15) return 50;
 
   const split = Math.floor(myMoves.length / 3);
   const early = myMoves.slice(0, split);
-  const mid = myMoves.slice(split, split * 2);
   const late = myMoves.slice(split * 2);
 
   // 计算每阶段的"平均意义度"
@@ -459,7 +458,6 @@ function analyzeFocus(moves: SgfMove[], boardSize: number, analyzedColor: "B" | 
   };
 
   const earlyRatio = meaningfulRatio(early, early);
-  const midRatio = meaningfulRatio(mid, myMoves.slice(0, split * 2));
   const lateRatio = meaningfulRatio(late, myMoves);
 
   // 如果后期有意义落子比例显著下降 = 专注力不足

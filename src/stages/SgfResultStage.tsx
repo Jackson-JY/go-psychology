@@ -354,7 +354,7 @@ export default function SgfResultStage() {
         transition={{ delay: 0.4 }}
         className="mt-4 space-y-2"
       >
-        {RADAR_AXES.map((axis, i) => (
+        {RADAR_AXES.map((axis) => (
           <DimensionCard
             key={axis.key}
             label={axis.label}

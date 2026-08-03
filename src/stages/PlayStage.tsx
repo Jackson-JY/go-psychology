@@ -6,25 +6,9 @@ import Seal from "@/components/Seal";
 import OptionOverlays from "@/components/OptionOverlays";
 import { useGameStore } from "@/store";
 import { analyzeMoves } from "@/lib/api";
-import type { Coord, PlacedStone } from "@/lib/types";
+import type { Coord } from "@/lib/types";
 
 const AUTO_ADVANCE_MS = 2000;
-const BASE_BOARD_SIZE = 9;
-
-/** 将基准 9x9 坐标按比例映射到目标棋盘大小 */
-function scaleCoord(c: Coord, targetSize: number): Coord {
-  if (targetSize === BASE_BOARD_SIZE) return c;
-  const scale = (targetSize - 1) / (BASE_BOARD_SIZE - 1);
-  return {
-    x: Math.round(c.x * scale),
-    y: Math.round(c.y * scale),
-  };
-}
-
-function scaleStones(stones: PlacedStone[], targetSize: number): PlacedStone[] {
-  if (targetSize === BASE_BOARD_SIZE) return stones;
-  return stones.map((s) => ({ ...s, ...scaleCoord(s, targetSize) }));
-}
 
 export default function PlayStage() {
   const {
@@ -39,7 +23,6 @@ export default function PlayStage() {
 
   const scenario = scenarios[currentScenarioIndex];
   const effectiveLevel = experienceLevel ?? "beginner";
-  const copy = scenario.copy[effectiveLevel];
   const isBeginner = effectiveLevel === "beginner";
   const boardSize = effectiveLevel === "skilled" ? 13 : 9;
 
@@ -48,20 +31,21 @@ export default function PlayStage() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMoveRef = useRef<Coord | null>(null);
 
-  // 根据棋盘大小缩放预设棋子坐标
-  const scaledStones = useMemo(
-    () => scaleStones(scenario.stones, boardSize),
-    [scenario.stones, boardSize],
+  // 按级别直接使用对应棋盘配置（不再缩放）
+  const boardStones = useMemo(
+    () => (scenario ? scenario.boards[effectiveLevel].stones : []),
+    [scenario, effectiveLevel],
   );
 
-  const scaledFocus = useMemo(
-    () => (scenario.focus ? scaleCoord(scenario.focus, boardSize) : undefined),
-    [scenario.focus, boardSize],
+  const boardFocus = useMemo(
+    () => (scenario ? scenario.boards[effectiveLevel].focus : undefined),
+    [scenario, effectiveLevel],
   );
 
-  // 零基础模式下 A/B 选项的视觉区域提示（坐标按棋盘大小缩放）
+  // 零基础模式下 A/B 选项的视觉区域提示（使用对应级别的 optionPos）
   const optionAreas = useMemo(() => {
-    if (!isBeginner) return [];
+    if (!scenario || !isBeginner) return [];
+    const copy = scenario.copy.beginner;
     const areas: { x: number; y: number; label: string; color: "cinnabar" | "bamboo" }[] = [];
     if (copy.optionAPos) {
       areas.push({ ...copy.optionAPos, label: copy.optionA ?? "选择 A", color: "cinnabar" });
@@ -69,8 +53,8 @@ export default function PlayStage() {
     if (copy.optionBPos) {
       areas.push({ ...copy.optionBPos, label: copy.optionB ?? "选择 B", color: "bamboo" });
     }
-    return areas.map((a) => ({ ...a, ...scaleCoord(a, boardSize) }));
-  }, [isBeginner, copy.optionA, copy.optionB, copy.optionAPos, copy.optionBPos, boardSize]);
+    return areas;
+  }, [scenario, isBeginner]);
 
   // 切关时重置
   useEffect(() => {
@@ -89,6 +73,16 @@ export default function PlayStage() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
+
+  if (!scenario) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-paper-100">
+        <span className="font-mono text-[10px] text-ink-900/50">加载中...</span>
+      </div>
+    );
+  }
+
+  const copy = scenario.copy[effectiveLevel];
 
   const advance = async () => {
     const coord = userMoveRef.current;
@@ -186,9 +180,9 @@ export default function PlayStage() {
           className="relative"
         >
           <GoBoard
-            stones={scaledStones}
+            stones={boardStones}
             userMove={userMove}
-            focus={scaledFocus}
+            focus={boardFocus}
             onPlace={handlePlace}
             disabled={phase !== "play"}
             size={320}

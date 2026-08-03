@@ -160,14 +160,20 @@ export interface ScenarioCopy {
   optionBPos?: Coord;
 }
 
+/** 棋盘级别的配置（棋子、焦点等） */
+export interface BoardConfig {
+  /** 棋盘上的预设残局（黑=B，白=W） */
+  stones: PlacedStone[];
+  /** 棋盘最关键的视觉中心点（用于 highlight） */
+  focus?: Coord;
+}
+
 /** 单关残局配置 */
 export interface Scenario {
   id: PuzzleId;
   index: number; // 1-4
   /** 两套文案：beginner=零基础，skilled=入门用户 */
   copy: Record<"beginner" | "skilled", ScenarioCopy>;
-  /** 棋盘 9x9 的预设残局（黑=B，白=W） */
-  stones: PlacedStone[];
-  /** 棋盘最关键的视觉中心点（用于 highlight） */
-  focus?: Coord;
+  /** 两套棋盘配置：beginner=9×9，skilled=13×13 */
+  boards: Record<"beginner" | "skilled", BoardConfig>;
 }

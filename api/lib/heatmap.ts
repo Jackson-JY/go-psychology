@@ -1,4 +1,4 @@
-import type { Coord, MoveRecord, RadarData, PuzzleId } from "@shared/types";
+import type { Coord, MoveRecord, RadarData } from "@shared/types";
 import { generateTags } from "@shared/archetypes.js";
 import type { HeatRect } from "@shared/scenarios.js";
 import { loadScenarioConfig } from "@shared/config.js";
@@ -11,17 +11,13 @@ function inRect(c: Coord, r: HeatRect): boolean {
   return c.x >= r.x0 && c.x <= r.x1 && c.y >= r.y0 && c.y <= r.y1;
 }
 
-/** 当前加载的题目配置（热区规则） */
-function getHeatmapConfig(): Record<PuzzleId, import("@shared/scenarios.js").HeatZone[]> {
+/** 当前加载的题目配置（热区规则），按关卡 ID+级别映射 */
+function getHeatmapConfig(): Record<string, import("@shared/scenarios.js").HeatZone[]> {
   const configs = loadScenarioConfig();
-  const map: Record<PuzzleId, import("@shared/scenarios.js").HeatZone[]> = {
-    lifeDeath: [],
-    opening: [],
-    invasion: [],
-    ko: [],
-  };
+  const map: Record<string, import("@shared/scenarios.js").HeatZone[]> = {};
   for (const cfg of configs) {
-    map[cfg.scenario.id] = cfg.heatmap;
+    map[`${cfg.scenario.id}:beginner`] = cfg.heatmaps.beginner;
+    map[`${cfg.scenario.id}:skilled`] = cfg.heatmaps.skilled;
   }
   return map;
 }
@@ -68,14 +64,15 @@ export interface AnalyzeInternal {
 
 export function mapMovesToProfile(
   moves: MoveRecord[],
-  _experienceLevel?: "beginner" | "skilled",
+  experienceLevel: "beginner" | "skilled" = "beginner",
 ): AnalyzeInternal {
   const radar: RadarData = { ...BASE_RADAR };
   const rationales: string[] = [];
 
   const heatmapConfig = getHeatmapConfig();
   for (const move of moves) {
-    const zones = heatmapConfig[move.puzzleId];
+    const key = `${move.puzzleId}:${experienceLevel}`;
+    const zones = heatmapConfig[key] ?? [];
     const matched = zones.find((z) => inRect(move, z.rect));
     if (matched) {
       rationales.push(`【${move.puzzleId}】${matched.rationale}`);

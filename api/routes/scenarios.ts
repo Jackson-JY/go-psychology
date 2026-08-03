@@ -13,9 +13,9 @@ function isValidConfig(body: unknown): body is ScenarioConfig[] {
   if (!Array.isArray(body)) return false;
   return body.every((item) => {
     if (!item || typeof item !== "object") return false;
-    const { scenario, heatmap } = item as { scenario?: unknown; heatmap?: unknown };
+    const { scenario, heatmaps } = item as { scenario?: unknown; heatmaps?: unknown };
     if (!scenario || typeof scenario !== "object") return false;
-    if (!Array.isArray(heatmap)) return false;
+    if (!heatmaps || typeof heatmaps !== "object") return false;
     return true;
   });
 }

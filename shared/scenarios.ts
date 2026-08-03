@@ -1,4 +1,4 @@
-import type { Scenario, RadarData } from "./types.js";
+import type { Scenario, RadarData, Coord, PlacedStone } from "./types.js";
 
 /** 热区矩形 */
 export interface HeatRect {
@@ -18,11 +18,130 @@ export interface HeatZone {
   rationale: string;
 }
 
+/** 棋盘级别配置（棋子、焦点）—— 与 types 中的 BoardConfig 保持一致 */
+export interface BoardConfig {
+  stones: PlacedStone[];
+  focus?: Coord;
+}
+
 /** 完整题目配置：包含棋盘、文案、热区分析规则 */
 export interface ScenarioConfig {
   scenario: Scenario;
-  heatmap: HeatZone[];
+  /** 两套热区：beginner=9×9 坐标，skilled=13×13 坐标 */
+  heatmaps: Record<"beginner" | "skilled", HeatZone[]>;
 }
+
+/** 9×9 坐标映射到 13×13 */
+function s9to13(c: Coord): Coord {
+  const scale = (13 - 1) / (9 - 1);
+  return { x: Math.round(c.x * scale), y: Math.round(c.y * scale) };
+}
+
+function stones9to13(stones: PlacedStone[]): PlacedStone[] {
+  return stones.map((s) => ({ ...s, ...s9to13(s) }));
+}
+
+function rect9to13(r: HeatRect): HeatRect {
+  const a = s9to13({ x: r.x0, y: r.y0 });
+  const b = s9to13({ x: r.x1, y: r.y1 });
+  return { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
+}
+
+const BEGINNER_1_LIFEDEATH_BOARD: BoardConfig = {
+  stones: [
+    { x: 1, y: 7, color: "B" as const },
+    { x: 2, y: 7, color: "B" as const },
+    { x: 3, y: 7, color: "B" as const },
+    { x: 4, y: 7, color: "B" as const },
+    { x: 0, y: 6, color: "W" as const },
+    { x: 1, y: 6, color: "W" as const },
+    { x: 2, y: 6, color: "W" as const },
+    { x: 3, y: 6, color: "W" as const },
+    { x: 4, y: 6, color: "W" as const },
+    { x: 5, y: 6, color: "W" as const },
+    { x: 0, y: 7, color: "W" as const },
+  ],
+  focus: { x: 2, y: 6 },
+};
+
+const BEGINNER_2_OPENING_BOARD: BoardConfig = {
+  stones: [
+    { x: 1, y: 1, color: "B" as const },
+    { x: 1, y: 7, color: "W" as const },
+    { x: 7, y: 7, color: "B" as const },
+  ],
+};
+
+const BEGINNER_3_INVASION_BOARD: BoardConfig = {
+  stones: [
+    { x: 1, y: 3, color: "B" as const },
+    { x: 1, y: 4, color: "B" as const },
+    { x: 1, y: 5, color: "B" as const },
+    { x: 2, y: 3, color: "B" as const },
+    { x: 2, y: 4, color: "B" as const },
+    { x: 2, y: 5, color: "B" as const },
+    { x: 3, y: 4, color: "W" as const },
+  ],
+  focus: { x: 3, y: 4 },
+};
+
+const BEGINNER_4_KO_BOARD: BoardConfig = {
+  stones: [
+    { x: 7, y: 1, color: "B" as const },
+    { x: 8, y: 1, color: "W" as const },
+    { x: 7, y: 2, color: "W" as const },
+    { x: 8, y: 2, color: "B" as const },
+    { x: 6, y: 2, color: "W" as const },
+    { x: 1, y: 6, color: "W" as const },
+    { x: 2, y: 6, color: "W" as const },
+    { x: 1, y: 7, color: "W" as const },
+    { x: 2, y: 7, color: "W" as const },
+    { x: 3, y: 6, color: "W" as const },
+    { x: 0, y: 5, color: "B" as const },
+    { x: 4, y: 8, color: "B" as const },
+  ],
+  focus: { x: 7, y: 1 },
+};
+
+const BEGINNER_1_HEATMAP: HeatZone[] = [
+  {
+    rect: { x0: 4, y0: 6, x1: 8, y1: 8 },
+    delta: { rationality: -25, resilience: +8, conflictResponse: +5 },
+    rationale: "二路黑子已被白棋三路厚壁压制，仍继续爬二路试图突围，不愿放弃已有投入，损失厌恶显著",
+  },
+  {
+    rect: { x0: 3, y0: 0, x1: 8, y1: 5 },
+    delta: { rationality: +25, focus: +10, riskAppetite: -5 },
+    rationale: "放弃二路被压制的黑子，转而在中腹或边路开辟新战场，懂得止损、放眼全局",
+  },
+  {
+    rect: { x0: 1, y0: 4, x1: 4, y1: 5 },
+    delta: { rationality: +5, focus: -5 },
+    rationale: "既不甘心放弃二路黑子，又不敢彻底投入突围，处于观望犹豫状态",
+  },
+];
+
+const BEGINNER_2_HEATMAP: HeatZone[] = [
+  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 0, y0: 6, x1: 2, y1: 8 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 6, y0: 0, x1: 8, y1: 2 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 6, y0: 6, x1: 8, y1: 8 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { riskAppetite: +25, conflictResponse: +10, focus: -5 }, rationale: "选择中腹高位，追求全局掌控和宏大布局，控制欲强" },
+  { rect: { x0: 0, y0: 3, x1: 2, y1: 5 }, delta: { riskAppetite: +5, rationality: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+  { rect: { x0: 6, y0: 3, x1: 8, y1: 5 }, delta: { riskAppetite: +5, rationality: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+];
+
+const BEGINNER_3_HEATMAP: HeatZone[] = [
+  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { conflictResponse: +25, riskAppetite: +10, rationality: -5 }, rationale: "面对挑衅选择正面迎击，攻击性强，冲突应对模式偏对抗" },
+  { rect: { x0: 0, y0: 3, x1: 2, y1: 5 }, delta: { conflictResponse: -20, rationality: +10, resilience: +5 }, rationale: "面对挑衅选择退让巩固，避免正面冲突，重视全局安定" },
+  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { conflictResponse: -25, riskAppetite: -10, focus: -5 }, rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向" },
+];
+
+const BEGINNER_4_HEATMAP: HeatZone[] = [
+  { rect: { x0: 5, y0: 0, x1: 8, y1: 4 }, delta: { focus: -20, resilience: +10, conflictResponse: +10, rationality: -10 }, rationale: "紧盯主战场劫争不放，隧道视野明显，难以接受局部受损" },
+  { rect: { x0: 0, y0: 5, x1: 4, y1: 8 }, delta: { focus: +25, rationality: +10, riskAppetite: +5 }, rationale: "放弃主战场劫争，转而攻击侧翼，展现灵活的多任务应变能力" },
+  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { focus: +5, rationality: -5 }, rationale: "既想处理劫争又想照顾侧翼，犹豫不决，缺乏明确优先级" },
+];
 
 export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
   {
@@ -47,38 +166,18 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "A. 继续爬二路试图突围  B. 弃子封外，在外围构筑厚势",
         },
       },
-      stones: [
-        { x: 1, y: 7, color: "B" as const },
-        { x: 2, y: 7, color: "B" as const },
-        { x: 3, y: 7, color: "B" as const },
-        { x: 4, y: 7, color: "B" as const },
-        { x: 0, y: 6, color: "W" as const },
-        { x: 1, y: 6, color: "W" as const },
-        { x: 2, y: 6, color: "W" as const },
-        { x: 3, y: 6, color: "W" as const },
-        { x: 4, y: 6, color: "W" as const },
-        { x: 5, y: 6, color: "W" as const },
-        { x: 0, y: 7, color: "W" as const },
-      ],
-      focus: { x: 2, y: 6 },
+      boards: {
+        beginner: BEGINNER_1_LIFEDEATH_BOARD,
+        skilled: {
+          stones: stones9to13(BEGINNER_1_LIFEDEATH_BOARD.stones),
+          focus: BEGINNER_1_LIFEDEATH_BOARD.focus ? s9to13(BEGINNER_1_LIFEDEATH_BOARD.focus) : undefined,
+        },
+      },
     },
-    heatmap: [
-      {
-        rect: { x0: 4, y0: 6, x1: 8, y1: 8 },
-        delta: { rationality: -25, resilience: +8, conflictResponse: +5 },
-        rationale: "二路黑子已被白棋三路厚壁压制，仍继续爬二路试图突围，不愿放弃已有投入，损失厌恶显著",
-      },
-      {
-        rect: { x0: 3, y0: 0, x1: 8, y1: 5 },
-        delta: { rationality: +25, focus: +10, riskAppetite: -5 },
-        rationale: "放弃二路被压制的黑子，转而在中腹或边路开辟新战场，懂得止损、放眼全局",
-      },
-      {
-        rect: { x0: 1, y0: 4, x1: 4, y1: 5 },
-        delta: { rationality: +5, focus: -5 },
-        rationale: "既不甘心放弃二路黑子，又不敢彻底投入突围，处于观望犹豫状态",
-      },
-    ],
+    heatmaps: {
+      beginner: BEGINNER_1_HEATMAP,
+      skilled: BEGINNER_1_HEATMAP.map((z) => ({ ...z, rect: rect9to13(z.rect) })),
+    },
   },
   {
     scenario: {
@@ -102,49 +201,18 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "A. 稳扎稳打先拿实地  B. 布局宏大占据中央",
         },
       },
-      stones: [
-        { x: 1, y: 1, color: "B" as const },
-        { x: 1, y: 7, color: "W" as const },
-        { x: 7, y: 7, color: "B" as const },
-      ],
+      boards: {
+        beginner: BEGINNER_2_OPENING_BOARD,
+        skilled: {
+          stones: stones9to13(BEGINNER_2_OPENING_BOARD.stones),
+          focus: BEGINNER_2_OPENING_BOARD.focus ? s9to13(BEGINNER_2_OPENING_BOARD.focus) : undefined,
+        },
+      },
     },
-    heatmap: [
-      {
-        rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
-        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
-        rationale: "选择角部巩固实地，优先追求确定性和安全感",
-      },
-      {
-        rect: { x0: 0, y0: 6, x1: 2, y1: 8 },
-        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
-        rationale: "选择角部巩固实地，优先追求确定性和安全感",
-      },
-      {
-        rect: { x0: 6, y0: 0, x1: 8, y1: 2 },
-        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
-        rationale: "选择角部巩固实地，优先追求确定性和安全感",
-      },
-      {
-        rect: { x0: 6, y0: 6, x1: 8, y1: 8 },
-        delta: { riskAppetite: -20, rationality: +5, focus: +5 },
-        rationale: "选择角部巩固实地，优先追求确定性和安全感",
-      },
-      {
-        rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
-        delta: { riskAppetite: +25, conflictResponse: +10, focus: -5 },
-        rationale: "选择中腹高位，追求全局掌控和宏大布局，控制欲强",
-      },
-      {
-        rect: { x0: 0, y0: 3, x1: 2, y1: 5 },
-        delta: { riskAppetite: +5, rationality: +3 },
-        rationale: "选择边线发展，兼顾安全与扩张，走中间路线",
-      },
-      {
-        rect: { x0: 6, y0: 3, x1: 8, y1: 5 },
-        delta: { riskAppetite: +5, rationality: +3 },
-        rationale: "选择边线发展，兼顾安全与扩张，走中间路线",
-      },
-    ],
+    heatmaps: {
+      beginner: BEGINNER_2_HEATMAP,
+      skilled: BEGINNER_2_HEATMAP.map((z) => ({ ...z, rect: rect9to13(z.rect) })),
+    },
   },
   {
     scenario: {
@@ -168,34 +236,18 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "A. 正面迎头痛击  B. 退让一步稳住阵脚",
         },
       },
-      stones: [
-        { x: 1, y: 3, color: "B" as const },
-        { x: 1, y: 4, color: "B" as const },
-        { x: 1, y: 5, color: "B" as const },
-        { x: 2, y: 3, color: "B" as const },
-        { x: 2, y: 4, color: "B" as const },
-        { x: 2, y: 5, color: "B" as const },
-        { x: 3, y: 4, color: "W" as const },
-      ],
-      focus: { x: 3, y: 4 },
+      boards: {
+        beginner: BEGINNER_3_INVASION_BOARD,
+        skilled: {
+          stones: stones9to13(BEGINNER_3_INVASION_BOARD.stones),
+          focus: BEGINNER_3_INVASION_BOARD.focus ? s9to13(BEGINNER_3_INVASION_BOARD.focus) : undefined,
+        },
+      },
     },
-    heatmap: [
-      {
-        rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
-        delta: { conflictResponse: +25, riskAppetite: +10, rationality: -5 },
-        rationale: "面对挑衅选择正面迎击，攻击性强，冲突应对模式偏对抗",
-      },
-      {
-        rect: { x0: 0, y0: 3, x1: 2, y1: 5 },
-        delta: { conflictResponse: -20, rationality: +10, resilience: +5 },
-        rationale: "面对挑衅选择退让巩固，避免正面冲突，重视全局安定",
-      },
-      {
-        rect: { x0: 0, y0: 0, x1: 2, y1: 2 },
-        delta: { conflictResponse: -25, riskAppetite: -10, focus: -5 },
-        rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向",
-      },
-    ],
+    heatmaps: {
+      beginner: BEGINNER_3_HEATMAP,
+      skilled: BEGINNER_3_HEATMAP.map((z) => ({ ...z, rect: rect9to13(z.rect) })),
+    },
   },
   {
     scenario: {
@@ -219,39 +271,18 @@ export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
           hint: "A. 紧盯主战场必须打赢  B. 避其锋芒换取侧翼开花",
         },
       },
-      stones: [
-        { x: 7, y: 1, color: "B" as const },
-        { x: 8, y: 1, color: "W" as const },
-        { x: 7, y: 2, color: "W" as const },
-        { x: 8, y: 2, color: "B" as const },
-        { x: 6, y: 2, color: "W" as const },
-        { x: 1, y: 6, color: "W" as const },
-        { x: 2, y: 6, color: "W" as const },
-        { x: 1, y: 7, color: "W" as const },
-        { x: 2, y: 7, color: "W" as const },
-        { x: 3, y: 6, color: "W" as const },
-        { x: 0, y: 5, color: "B" as const },
-        { x: 4, y: 8, color: "B" as const },
-      ],
-      focus: { x: 7, y: 1 },
+      boards: {
+        beginner: BEGINNER_4_KO_BOARD,
+        skilled: {
+          stones: stones9to13(BEGINNER_4_KO_BOARD.stones),
+          focus: BEGINNER_4_KO_BOARD.focus ? s9to13(BEGINNER_4_KO_BOARD.focus) : undefined,
+        },
+      },
     },
-    heatmap: [
-      {
-        rect: { x0: 5, y0: 0, x1: 8, y1: 4 },
-        delta: { focus: -20, resilience: +10, conflictResponse: +10, rationality: -10 },
-        rationale: "紧盯主战场劫争不放，隧道视野明显，难以接受局部受损",
-      },
-      {
-        rect: { x0: 0, y0: 5, x1: 4, y1: 8 },
-        delta: { focus: +25, rationality: +10, riskAppetite: +5 },
-        rationale: "放弃主战场劫争，转而攻击侧翼，展现灵活的多任务应变能力",
-      },
-      {
-        rect: { x0: 3, y0: 3, x1: 5, y1: 5 },
-        delta: { focus: +5, rationality: -5 },
-        rationale: "既想处理劫争又想照顾侧翼，犹豫不决，缺乏明确优先级",
-      },
-    ],
+    heatmaps: {
+      beginner: BEGINNER_4_HEATMAP,
+      skilled: BEGINNER_4_HEATMAP.map((z) => ({ ...z, rect: rect9to13(z.rect) })),
+    },
   },
 ];
 

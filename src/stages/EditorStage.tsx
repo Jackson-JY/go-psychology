@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { useGameStore } from "@/store";
 import type { ScenarioConfig, Scenario, HeatZone, PlacedStone, Coord } from "@/lib/types";
 import { fetchScenarioConfig, saveScenarioConfig } from "@/lib/api";
@@ -13,7 +12,13 @@ const RADAR_KEYS = [
   { key: "focus", label: "长效专注" },
 ] as const;
 
-const BOARD_SIZE = 9;
+type EditLevel = "beginner" | "skilled";
+
+const LEVEL_META: Record<EditLevel, { boardSize: number; label: string }> = {
+  beginner: { boardSize: 9, label: "零基础 · 9×9" },
+  skilled: { boardSize: 13, label: "有基础 · 13×13" },
+};
+
 const BOARD_PX = 320;
 
 function boardMetrics(size: number, boardSize: number) {
@@ -44,21 +49,12 @@ function rectToStyle(
   return { left, top, width, height };
 }
 
-const EMPTY_SCENARIO: Scenario = {
-  id: "lifeDeath",
-  index: 0,
-  copy: {
-    beginner: { title: "新", subtitle: "新题目", prompt: "", hint: "" },
-    skilled: { title: "新", subtitle: "新题目", prompt: "", hint: "" },
-  },
-  stones: [],
-};
-
 export default function EditorStage() {
   const restart = useGameStore((s) => s.restart);
   const goStats = useGameStore((s) => s.goStats);
   const [config, setConfig] = useState<ScenarioConfig[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [editLevel, setEditLevel] = useState<EditLevel>("beginner");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -75,6 +71,7 @@ export default function EditorStage() {
   }, []);
 
   const active = config[activeIndex];
+  const activeBoardSize = LEVEL_META[editLevel].boardSize;
 
   const updateScenario = (scenario: Scenario) => {
     const next = [...config];
@@ -82,10 +79,21 @@ export default function EditorStage() {
     setConfig(next);
   };
 
-  const updateHeatmap = (heatmap: HeatZone[]) => {
+  const updateHeatmaps = (heatmaps: Record<EditLevel, HeatZone[]>) => {
     const next = [...config];
-    next[activeIndex] = { ...next[activeIndex], heatmap };
+    next[activeIndex] = { ...next[activeIndex], heatmaps };
     setConfig(next);
+  };
+
+  /** 更新当前级别棋盘：stones / focus */
+  const updateLevelBoard = (updater: (board: { stones: PlacedStone[]; focus?: Coord }) => { stones: PlacedStone[]; focus?: Coord }) => {
+    if (!active) return;
+    const scenario = active.scenario;
+    const nextBoard = updater(scenario.boards[editLevel]);
+    updateScenario({
+      ...scenario,
+      boards: { ...scenario.boards, [editLevel]: nextBoard },
+    });
   };
 
   const normalizeRect = (a: Coord, b: Coord): HeatZone["rect"] => ({
@@ -95,26 +103,26 @@ export default function EditorStage() {
     y1: Math.max(a.y, b.y),
   });
 
+  const currentBoard = active?.scenario.boards[editLevel];
+  const currentHeatmap = active?.heatmaps[editLevel] ?? [];
+
   const handleBoardClick = (x: number, y: number) => {
     if (!active || !placingMode) return;
     const scenario = active.scenario;
+    const board = scenario.boards[editLevel];
 
     if (placingMode === "focus") {
-      updateScenario({ ...scenario, focus: { x, y } });
+      updateLevelBoard(() => ({ ...board, focus: { x, y } }));
       return;
     }
 
     if (placingMode === "black" || placingMode === "white") {
-      const exists = scenario.stones.findIndex((s) => s.x === x && s.y === y);
+      const exists = board.stones.findIndex((s) => s.x === x && s.y === y);
       if (exists >= 0) {
-        const stones = scenario.stones.filter((_, i) => i !== exists);
-        updateScenario({ ...scenario, stones });
+        updateLevelBoard(() => ({ ...board, stones: board.stones.filter((_, i) => i !== exists) }));
       } else {
-        const stones: PlacedStone[] = [
-          ...scenario.stones,
-          { x, y, color: placingMode === "black" ? "B" : "W" },
-        ];
-        updateScenario({ ...scenario, stones });
+        const color = placingMode === "black" ? "B" : "W";
+        updateLevelBoard(() => ({ ...board, stones: [...board.stones, { x, y, color }] }));
       }
       return;
     }
@@ -138,45 +146,94 @@ export default function EditorStage() {
         return;
       }
       const rect = normalizeRect(heatStart, end);
+      const heatmaps = { ...active.heatmaps };
       if (editHeatmapIndex != null) {
-        const heatmap = active.heatmap.map((z, i) =>
+        heatmaps[editLevel] = heatmaps[editLevel].map((z, i) =>
           i === editHeatmapIndex ? { ...z, rect } : z,
         );
-        updateHeatmap(heatmap);
       } else {
-        const heatmap = [
-          ...active.heatmap,
+        heatmaps[editLevel] = [
+          ...heatmaps[editLevel],
           { rect, delta: {}, rationale: "" },
         ];
-        updateHeatmap(heatmap);
-        setEditHeatmapIndex(heatmap.length - 1);
+        setEditHeatmapIndex(heatmaps[editLevel].length - 1);
       }
+      updateHeatmaps(heatmaps);
       setHeatStart(null);
     }
   };
 
   const handleAddHeatZone = () => {
     if (!active) return;
-    const heatmap = [
-      ...active.heatmap,
+    const heatmaps = { ...active.heatmaps };
+    heatmaps[editLevel] = [
+      ...heatmaps[editLevel],
       { rect: { x0: 0, y0: 0, x1: 1, y1: 1 }, delta: {}, rationale: "" },
     ];
-    updateHeatmap(heatmap);
-    setEditHeatmapIndex(heatmap.length - 1);
+    updateHeatmaps(heatmaps);
+    setEditHeatmapIndex(heatmaps[editLevel].length - 1);
     setPlacingMode("heat");
     setHeatStart(null);
   };
 
   const handleUpdateHeatZone = (idx: number, zone: HeatZone) => {
     if (!active) return;
-    const heatmap = active.heatmap.map((z, i) => (i === idx ? zone : z));
-    updateHeatmap(heatmap);
+    const heatmaps = { ...active.heatmaps };
+    heatmaps[editLevel] = heatmaps[editLevel].map((z, i) => (i === idx ? zone : z));
+    updateHeatmaps(heatmaps);
   };
 
   const handleRemoveHeatZone = (idx: number) => {
     if (!active) return;
-    updateHeatmap(active.heatmap.filter((_, i) => i !== idx));
+    const heatmaps = { ...active.heatmaps };
+    heatmaps[editLevel] = heatmaps[editLevel].filter((_, i) => i !== idx);
+    updateHeatmaps(heatmaps);
     if (editHeatmapIndex === idx) setEditHeatmapIndex(null);
+  };
+
+  /** 9×9 → 13×13 坐标缩放 */
+  const scaleCoord = (c: Coord): Coord => {
+    const scale = (13 - 1) / (9 - 1);
+    return { x: Math.round(c.x * scale), y: Math.round(c.y * scale) };
+  };
+
+  /** 将 beginer 的棋盘/热区同步到 skilled（一键缩放拷贝） */
+  const handleCopyFromOtherLevel = (from: EditLevel) => {
+    if (!active) return;
+    const to = from === "beginner" ? "skilled" : "beginner";
+    const fromBoard = active.scenario.boards[from];
+
+    // 若从 9→13 则缩放，从 13→9 反缩放
+    const convert = (c: Coord): Coord => {
+      if (from === "beginner" && to === "skilled") return scaleCoord(c);
+      if (from === "skilled" && to === "beginner") {
+        const scale = (9 - 1) / (13 - 1);
+        return { x: Math.round(c.x * scale), y: Math.round(c.y * scale) };
+      }
+      return c;
+    };
+
+    const newBoard = {
+      stones: fromBoard.stones.map((s) => ({ ...s, ...convert(s) })),
+      focus: fromBoard.focus ? convert(fromBoard.focus) : undefined,
+    };
+
+    const heatmaps = { ...active.heatmaps };
+    heatmaps[to] = heatmaps[from].map((z) => {
+      const a = convert({ x: z.rect.x0, y: z.rect.y0 });
+      const b = convert({ x: z.rect.x1, y: z.rect.y1 });
+      return {
+        ...z,
+        rect: { x0: a.x, y0: a.y, x1: b.x, y1: b.y },
+      };
+    });
+
+    updateScenario({
+      ...active.scenario,
+      boards: { ...active.scenario.boards, [to]: newBoard },
+    });
+    updateHeatmaps(heatmaps);
+    setMessage(`已从 ${LEVEL_META[from].label} 同步到 ${LEVEL_META[to].label}`);
   };
 
   const handleSave = async () => {
@@ -199,14 +256,17 @@ export default function EditorStage() {
   const optionHints = useMemo(() => {
     if (!active) return [];
     const list: { coord: Coord; label: string; color: string }[] = [];
-    const a = active.scenario.copy.beginner.optionAPos;
-    const b = active.scenario.copy.beginner.optionBPos;
-    if (a) list.push({ coord: a, label: active.scenario.copy.beginner.optionA || "A", color: "#C8392B" });
-    if (b) list.push({ coord: b, label: active.scenario.copy.beginner.optionB || "B", color: "#5A7A6B" });
+    // A/B 提示只在 beginner 有意义，但在编辑 beginner 模式时显示
+    if (editLevel === "beginner") {
+      const a = active.scenario.copy.beginner.optionAPos;
+      const b = active.scenario.copy.beginner.optionBPos;
+      if (a) list.push({ coord: a, label: active.scenario.copy.beginner.optionA || "A", color: "#C8392B" });
+      if (b) list.push({ coord: b, label: active.scenario.copy.beginner.optionB || "B", color: "#5A7A6B" });
+    }
     return list;
-  }, [active]);
+  }, [active, editLevel]);
 
-  const { padding, cell } = boardMetrics(BOARD_PX, BOARD_SIZE);
+  const { cell } = boardMetrics(BOARD_PX, activeBoardSize);
 
   if (!active) {
     return (
@@ -216,9 +276,11 @@ export default function EditorStage() {
     );
   }
 
+  const otherLevel: EditLevel = editLevel === "beginner" ? "skilled" : "beginner";
+
   return (
     <div className="min-h-[100dvh] bg-paper-100 px-4 py-6">
-      <header className="mb-4 flex items-center justify-between">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-serif text-xl font-semibold text-ink-900">题目编辑器</h1>
         <div className="flex gap-2">
           <button onClick={restart} className="btn-outline text-xs">返回首页</button>
@@ -230,12 +292,13 @@ export default function EditorStage() {
       </header>
 
       {message && (
-        <div className={`mb-4 rounded-sm px-3 py-2 font-mono text-[11px] ${message.includes("成功") ? "bg-green-100 text-green-800" : "bg-cinnabar/10 text-cinnabar"}`}>
+        <div className={`mb-4 rounded-sm px-3 py-2 font-mono text-[11px] ${message.includes("成功") || message.includes("同步") ? "bg-green-100 text-green-800" : "bg-cinnabar/10 text-cinnabar"}`}>
           {message}
         </div>
       )}
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      {/* 关卡切换 */}
+      <div className="mb-3 flex flex-wrap gap-2">
         {config.map((c, i) => (
           <button
             key={c.scenario.id + i}
@@ -245,6 +308,27 @@ export default function EditorStage() {
             {c.scenario.copy.beginner.title || `第 ${i + 1} 关`}
           </button>
         ))}
+      </div>
+
+      {/* 级别切换 */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="flex gap-1 rounded-sm border border-ink-900/10 bg-white/50 p-1">
+          {(["beginner", "skilled"] as const).map((lv) => (
+            <button
+              key={lv}
+              onClick={() => { setEditLevel(lv); setEditHeatmapIndex(null); setHeatStart(null); }}
+              className={`rounded-sm px-3 py-1.5 text-xs ${editLevel === lv ? "bg-cinnabar text-white" : "text-ink-900 hover:bg-ink-900/5"}`}
+            >
+              {LEVEL_META[lv].label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => handleCopyFromOtherLevel(otherLevel)}
+          className="rounded-sm border border-ink-900/10 bg-white/50 px-3 py-1.5 text-[11px] text-ink-900 hover:bg-ink-900/5"
+        >
+          从 {LEVEL_META[otherLevel].label} 同步缩放
+        </button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -276,12 +360,12 @@ export default function EditorStage() {
           <div className="flex justify-center">
             <div className="relative" style={{ width: BOARD_PX, height: BOARD_PX }}>
               <GoBoard
-                stones={active.scenario.stones}
-                focus={active.scenario.focus}
+                stones={currentBoard?.stones ?? []}
+                focus={currentBoard?.focus}
                 highlightAreas={optionHints.map((h) => h.coord)}
                 onPlace={handleBoardClick}
                 size={BOARD_PX}
-                boardSize={BOARD_SIZE}
+                boardSize={activeBoardSize}
               />
               {/* 热区与 AB 提示覆盖层 */}
               <svg
@@ -289,8 +373,8 @@ export default function EditorStage() {
                 width={BOARD_PX}
                 height={BOARD_PX}
               >
-                {active.heatmap.map((zone, idx) => {
-                  const { left, top, width, height } = rectToStyle(zone.rect, BOARD_PX, BOARD_SIZE);
+                {currentHeatmap.map((zone, idx) => {
+                  const { left, top, width, height } = rectToStyle(zone.rect, BOARD_PX, activeBoardSize);
                   const selected = editHeatmapIndex === idx;
                   return (
                     <g key={idx}>
@@ -319,7 +403,7 @@ export default function EditorStage() {
                 {heatStart && (
                   <g>
                     {(() => {
-                      const { left, top } = coordToPx(heatStart, BOARD_PX, BOARD_SIZE);
+                      const { left, top } = coordToPx(heatStart, BOARD_PX, activeBoardSize);
                       return (
                         <>
                           <circle cx={left} cy={top} r={cell * 0.25} fill="#C8392B" />
@@ -332,7 +416,7 @@ export default function EditorStage() {
                   </g>
                 )}
                 {optionHints.map((hint, i) => {
-                  const { left, top } = coordToPx(hint.coord, BOARD_PX, BOARD_SIZE);
+                  const { left, top } = coordToPx(hint.coord, BOARD_PX, activeBoardSize);
                   return (
                     <g key={i}>
                       <circle cx={left} cy={top} r={cell * 0.35} fill={hint.color} opacity={0.8} />
@@ -352,7 +436,9 @@ export default function EditorStage() {
                 ? "已选起点，再点击对角完成热区矩形"
                 : "点击棋盘设置热区矩形起点"
               : placingMode === "area-a" || placingMode === "area-b"
-                ? `点击棋盘设置 ${placingMode === "area-a" ? "A" : "B"} 提示位置`
+                ? editLevel === "beginner"
+                  ? `点击棋盘设置 ${placingMode === "area-a" ? "A" : "B"} 提示位置`
+                  : "A/B 提示仅用于零基础模式，请切换到 9×9 编辑"
                 : "点击上方模式后，在棋盘上点击以添加/移除。"}
           </p>
         </div>
@@ -379,8 +465,11 @@ export default function EditorStage() {
           </label>
 
           {(["beginner", "skilled"] as const).map((level) => (
-            <div key={level} className="space-y-2 border-t border-ink-900/10 pt-3">
-              <h3 className="font-mono text-[10px] tracking-widest text-ink-900/60">{level === "beginner" ? "零基础文案" : "有基础文案"}</h3>
+            <div key={level} className={`space-y-2 border-t border-ink-900/10 pt-3 ${editLevel !== level ? "opacity-70" : ""}`}>
+              <h3 className="font-mono text-[10px] tracking-widest text-ink-900/60">
+                {level === "beginner" ? "零基础文案" : "有基础文案"}
+                {editLevel === level && <span className="ml-2 text-cinnabar">●</span>}
+              </h3>
               <div className="grid gap-2">
                 <input
                   value={active.scenario.copy[level].title}
@@ -473,11 +562,13 @@ export default function EditorStage() {
 
           <div className="border-t border-ink-900/10 pt-3">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-mono text-[10px] tracking-widest text-ink-900/60">热区规则</h3>
+              <h3 className="font-mono text-[10px] tracking-widest text-ink-900/60">
+                热区规则 · {LEVEL_META[editLevel].label}
+              </h3>
               <button onClick={handleAddHeatZone} className="text-xs text-cinnabar hover:underline">+ 添加热区</button>
             </div>
             <div className="space-y-2">
-              {active.heatmap.map((zone, idx) => (
+              {currentHeatmap.map((zone, idx) => (
                 <div key={idx} className={`rounded-sm border p-2 text-xs ${editHeatmapIndex === idx ? "border-cinnabar bg-cinnabar/5" : "border-ink-900/10"}`}>
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-mono text-[10px]">热区 {idx + 1}</span>
@@ -497,7 +588,7 @@ export default function EditorStage() {
                             <input
                               type="number"
                               min={0}
-                              max={8}
+                              max={activeBoardSize - 1}
                               value={zone.rect[k]}
                               onChange={(e) => handleUpdateHeatZone(idx, {
                                 ...zone,
@@ -545,6 +636,9 @@ export default function EditorStage() {
                   )}
                 </div>
               ))}
+              {currentHeatmap.length === 0 && (
+                <p className="font-mono text-[10px] text-ink-900/40">暂无热区</p>
+              )}
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import type { RadarData, CareerAdvice } from "@shared/types";
+import type { RadarData } from "@shared/types";
 
 interface CareerResult {
   suitableRoles: string[];

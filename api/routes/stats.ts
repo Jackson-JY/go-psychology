@@ -7,9 +7,9 @@ function getPassword(): string | undefined {
   return process.env.EDITOR_PASSWORD;
 }
 
-router.get("/", (req: Request, res: Response) => {
+router.post("/", (req: Request, res: Response) => {
   const expected = getPassword();
-  const password = (req.query.password as string) || "";
+  const { password, days: rawDays } = req.body as { password?: string; days?: number };
 
   if (!expected) {
     res.status(403).json({ error: "未配置管理密码" });
@@ -21,7 +21,7 @@ router.get("/", (req: Request, res: Response) => {
     return;
   }
 
-  const days = Math.min(Math.max(parseInt((req.query.days as string) || "7", 10) || 7, 1), 30);
+  const days = Math.min(Math.max(rawDays ?? 7, 1), 30);
 
   try {
     const stats = getStats(days);

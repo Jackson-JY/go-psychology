@@ -11,7 +11,13 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      // 显式读取 .env 文件，PM2 默认不会读取
+      env_file: path.join(__dirname, '.env'),
       env: {
+        NODE_ENV: 'production',
+        PORT: 3001,
+      },
+      env_production: {
         NODE_ENV: 'production',
         PORT: 3001,
       },

@@ -4,7 +4,7 @@ export function generateHeatmap(moves: MoveRecord[]): HeatmapData {
   const grid: number[][] = Array(9).fill(null).map(() => Array(9).fill(0));
 
   moves.forEach((move) => {
-    const { x, y, puzzleId, elapsedMs } = move;
+    const { x, y, elapsedMs } = move;
     
     let baseValue = 100;
     if (elapsedMs > 5000) {
