@@ -366,6 +366,7 @@ export default function EditorStage() {
                 onPlace={handleBoardClick}
                 size={BOARD_PX}
                 boardSize={activeBoardSize}
+                allowOccupiedClick
               />
               {/* 热区与 AB 提示覆盖层 */}
               <svg

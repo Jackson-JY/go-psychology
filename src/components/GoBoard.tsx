@@ -11,6 +11,8 @@ interface GoBoardProps {
   size?: number;
   showHint?: boolean;
   boardSize?: number;
+  /** 编辑器模式：允许点击已有棋子的位置（用于删除/替换） */
+  allowOccupiedClick?: boolean;
 }
 
 function getStarPoints(n: number): Coord[] {
@@ -46,6 +48,7 @@ export default function GoBoard({
   size = 320,
   showHint: _showHint = false,
   boardSize = 9,
+  allowOccupiedClick = false,
 }: GoBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   /** 用于触发 CSS 波纹渲染的 key，只在落子时变化 */
@@ -79,9 +82,9 @@ export default function GoBoard({
     }
     if (!best || best.dist > cellSize * 0.8) return null;
     const occupied = stones.some((s) => s.x === best!.x && s.y === best!.y);
-    if (occupied) return null;
+    if (occupied && !allowOccupiedClick) return null;
     return { x: best.x, y: best.y };
-  }, [toPx, stones, cellSize, BOARD_N]);
+  }, [toPx, stones, cellSize, BOARD_N, allowOccupiedClick]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
