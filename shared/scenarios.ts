@@ -104,43 +104,73 @@ const BEGINNER_4_KO_BOARD: BoardConfig = {
 };
 
 const BEGINNER_1_HEATMAP: HeatZone[] = [
+  // 高风险/沉没成本：继续救援被困子
   {
     rect: { x0: 4, y0: 6, x1: 8, y1: 8 },
-    delta: { rationality: -25, resilience: +8, conflictResponse: +5 },
+    delta: { rationality: -20, resilience: +10, conflictResponse: +8, riskAppetite: +5 },
     rationale: "二路黑子已被白棋三路厚壁压制，仍继续爬二路试图突围，不愿放弃已有投入，损失厌恶显著",
   },
+  // 理性止损：中腹/上边开辟新战场
   {
     rect: { x0: 3, y0: 0, x1: 8, y1: 5 },
-    delta: { rationality: +25, focus: +10, riskAppetite: -5 },
+    delta: { rationality: +20, focus: +10, riskAppetite: -5, resilience: +3 },
     rationale: "放弃二路被压制的黑子，转而在中腹或边路开辟新战场，懂得止损、放眼全局",
   },
+  // 犹豫观望
   {
     rect: { x0: 1, y0: 4, x1: 4, y1: 5 },
-    delta: { rationality: +5, focus: -5 },
+    delta: { rationality: +5, focus: -8, conflictResponse: -5 },
     rationale: "既不甘心放弃二路黑子，又不敢彻底投入突围，处于观望犹豫状态",
+  },
+  // 极端弃子：左上角狠心割舍，抗压受损
+  {
+    rect: { x0: 0, y0: 0, x1: 2, y1: 3 },
+    delta: { rationality: +25, riskAppetite: -15, resilience: -15, focus: +5 },
+    rationale: "彻底放弃被围黑子并远远躲开，虽能止损，但显露对压力的逃避",
   },
 ];
 
 const BEGINNER_2_HEATMAP: HeatZone[] = [
-  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
-  { rect: { x0: 0, y0: 6, x1: 2, y1: 8 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
-  { rect: { x0: 6, y0: 0, x1: 8, y1: 2 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
-  { rect: { x0: 6, y0: 6, x1: 8, y1: 8 }, delta: { riskAppetite: -20, rationality: +5, focus: +5 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
-  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { riskAppetite: +25, conflictResponse: +10, focus: -5 }, rationale: "选择中腹高位，追求全局掌控和宏大布局，控制欲强" },
-  { rect: { x0: 0, y0: 3, x1: 2, y1: 5 }, delta: { riskAppetite: +5, rationality: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
-  { rect: { x0: 6, y0: 3, x1: 8, y1: 5 }, delta: { riskAppetite: +5, rationality: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+  // 四角：稳健保守（含一点回避倾向）
+  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { riskAppetite: -15, rationality: +8, focus: +5, resilience: +3, conflictResponse: -3 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 0, y0: 6, x1: 2, y1: 8 }, delta: { riskAppetite: -15, rationality: +8, focus: +5, resilience: +3, conflictResponse: -3 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 6, y0: 0, x1: 8, y1: 2 }, delta: { riskAppetite: -15, rationality: +8, focus: +5, resilience: +3, conflictResponse: -3 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  { rect: { x0: 6, y0: 6, x1: 8, y1: 8 }, delta: { riskAppetite: -15, rationality: +8, focus: +5, resilience: +3, conflictResponse: -3 }, rationale: "选择角部巩固实地，优先追求确定性和安全感" },
+  // 中腹：宏大布局
+  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { riskAppetite: +20, conflictResponse: +10, focus: -8 }, rationale: "选择中腹高位，追求全局掌控和宏大布局，控制欲强" },
+  // 边线：平衡发展（避免与四角重叠）
+  { rect: { x0: 0, y0: 3, x1: 1, y1: 5 }, delta: { riskAppetite: +5, rationality: +5, focus: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+  { rect: { x0: 7, y0: 3, x1: 8, y1: 5 }, delta: { riskAppetite: +5, rationality: +5, focus: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+  { rect: { x0: 3, y0: 0, x1: 5, y1: 1 }, delta: { riskAppetite: +5, rationality: +5, focus: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+  { rect: { x0: 3, y0: 7, x1: 5, y1: 8 }, delta: { riskAppetite: +5, rationality: +5, focus: +3 }, rationale: "选择边线发展，兼顾安全与扩张，走中间路线" },
+  // 靠近对手：主动挑衅
+  { rect: { x0: 0, y0: 5, x1: 3, y1: 7 }, delta: { riskAppetite: +15, conflictResponse: +18, rationality: -5, focus: -5 }, rationale: "主动靠近对方厚势挑起战斗，风险偏好与对抗性都很强" },
+  { rect: { x0: 5, y0: 0, x1: 8, y1: 3 }, delta: { riskAppetite: +15, conflictResponse: +18, rationality: -5, focus: -5 }, rationale: "主动靠近对方厚势挑起战斗，风险偏好与对抗性都很强" },
 ];
 
 const BEGINNER_3_HEATMAP: HeatZone[] = [
-  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { conflictResponse: +25, riskAppetite: +10, rationality: -5 }, rationale: "面对挑衅选择正面迎击，攻击性强，冲突应对模式偏对抗" },
-  { rect: { x0: 0, y0: 3, x1: 2, y1: 5 }, delta: { conflictResponse: -20, rationality: +10, resilience: +5 }, rationale: "面对挑衅选择退让巩固，避免正面冲突，重视全局安定" },
-  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { conflictResponse: -25, riskAppetite: -10, focus: -5 }, rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向" },
+  // 正面迎击
+  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { conflictResponse: +25, riskAppetite: +10, rationality: -8, resilience: +5 }, rationale: "面对挑衅选择正面迎击，攻击性强，冲突应对模式偏对抗" },
+  // 侧面反击
+  { rect: { x0: 3, y0: 0, x1: 5, y1: 2 }, delta: { conflictResponse: +10, rationality: +8, focus: +5 }, rationale: "不正面硬碰，而是从侧面施压，理性中保留反击空间" },
+  { rect: { x0: 3, y0: 6, x1: 5, y1: 8 }, delta: { conflictResponse: +10, rationality: +8, focus: +5 }, rationale: "不正面硬碰，而是从侧面施压，理性中保留反击空间" },
+  // 退让稳守
+  { rect: { x0: 0, y0: 3, x1: 2, y1: 5 }, delta: { conflictResponse: -20, rationality: +10, resilience: +8 }, rationale: "面对挑衅选择退让巩固，避免正面冲突，重视全局安定" },
+  // 大幅逃离/回避
+  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { conflictResponse: -25, riskAppetite: -10, focus: -8, resilience: -10 }, rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向，抗压也受损" },
+  { rect: { x0: 0, y0: 6, x1: 2, y1: 8 }, delta: { conflictResponse: -25, riskAppetite: -10, focus: -8, resilience: -10 }, rationale: "大幅退让甚至逃离战场，对冲突有较强回避倾向，抗压也受损" },
 ];
 
 const BEGINNER_4_HEATMAP: HeatZone[] = [
-  { rect: { x0: 5, y0: 0, x1: 8, y1: 4 }, delta: { focus: -20, resilience: +10, conflictResponse: +10, rationality: -10 }, rationale: "紧盯主战场劫争不放，隧道视野明显，难以接受局部受损" },
-  { rect: { x0: 0, y0: 5, x1: 4, y1: 8 }, delta: { focus: +25, rationality: +10, riskAppetite: +5 }, rationale: "放弃主战场劫争，转而攻击侧翼，展现灵活的多任务应变能力" },
-  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { focus: +5, rationality: -5 }, rationale: "既想处理劫争又想照顾侧翼，犹豫不决，缺乏明确优先级" },
+  // 主战场劫争到底
+  { rect: { x0: 5, y0: 0, x1: 8, y1: 4 }, delta: { focus: -20, resilience: +10, conflictResponse: +10, rationality: -15 }, rationale: "紧盯主战场劫争不放，隧道视野明显，难以接受局部受损" },
+  // 侧翼转移
+  { rect: { x0: 0, y0: 5, x1: 4, y1: 8 }, delta: { focus: +25, rationality: +10, riskAppetite: +5, resilience: +3 }, rationale: "放弃主战场劫争，转而攻击侧翼，展现灵活的多任务应变能力" },
+  // 中间犹豫
+  { rect: { x0: 3, y0: 3, x1: 5, y1: 5 }, delta: { focus: +5, rationality: -8, conflictResponse: -5 }, rationale: "既想处理劫争又想照顾侧翼，犹豫不决，缺乏明确优先级" },
+  // 彻底慌乱逃离
+  { rect: { x0: 0, y0: 0, x1: 2, y1: 2 }, delta: { focus: -15, rationality: -15, resilience: -15, riskAppetite: -10 }, rationale: "两边都放弃，选择远离战场的角落，显示慌乱与抗压不足" },
+  { rect: { x0: 6, y0: 6, x1: 8, y1: 8 }, delta: { focus: -15, rationality: -15, resilience: -15, riskAppetite: -10 }, rationale: "两边都放弃，选择远离战场的角落，显示慌乱与抗压不足" },
 ];
 
 export const DEFAULT_SCENARIO_CONFIG: ScenarioConfig[] = [
