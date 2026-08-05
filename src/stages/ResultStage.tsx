@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import RadarChart from "@/components/RadarChart";
-import HeatmapChart from "@/components/HeatmapChart";
+
 import Seal from "@/components/Seal";
 import { useGameStore } from "@/store";
 import {
@@ -184,18 +184,6 @@ export default function ResultStage() {
               潜意识维度
             </div>
             <RadarChart data={result.radar} size={280} />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-paper-200 rounded-lg p-4"
-          >
-            <div className="font-mono text-[10px] tracking-widest text-ink-900/40 mb-3 text-center">
-              落子轨迹
-            </div>
-            <HeatmapChart data={result.heatmap} />
           </motion.div>
 
           <motion.div

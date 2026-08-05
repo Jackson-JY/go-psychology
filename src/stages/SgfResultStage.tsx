@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, RotateCcw, Target, Brain, Shield, Swords, Eye } from "lucide-react";
 import Seal from "@/components/Seal";
-import HeatmapChart from "@/components/HeatmapChart";
+
 import { useGameStore } from "@/store";
 import type { SgfAnalysisResponse } from "@/lib/types";
 import {
@@ -177,7 +177,7 @@ export default function SgfResultStage() {
 
   if (!sgfResult) return null;
 
-  const { radar, tags, keyMoments, moveCount, boardSize, heatmap } = sgfResult;
+  const { radar, tags, keyMoments, moveCount, boardSize } = sgfResult;
 
   const archetype = useMemo(() => {
     return matchArchetype(radar as CoreRadar);
@@ -364,19 +364,6 @@ export default function SgfResultStage() {
           />
         ))}
       </motion.div>
-
-      {/* 热力图 */}
-      {heatmap && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-6 flex flex-col items-center"
-        >
-          <h3 className="mb-2 font-kai text-base font-semibold text-ink-900">落子热力分布</h3>
-          <HeatmapChart data={heatmap} />
-        </motion.div>
-      )}
 
       {/* 关键节点 */}
       <motion.div
