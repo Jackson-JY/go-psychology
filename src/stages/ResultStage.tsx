@@ -268,6 +268,11 @@ export default function ResultStage() {
                   用于服务器维护与接入 KataGo / DeepSeek 更精准分析
                 </span>
               </p>
+              <p className="mt-3 font-kai text-[12px] leading-relaxed text-ink-900/50">
+                如果你有更棒的测试题目或棋谱分析想法，
+                <br />
+                也欢迎加微信交流，一起让测试更准确、更有趣。
+              </p>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
