@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import RadarChart from "@/components/RadarChart";
 
 import Seal from "@/components/Seal";
+import ShareQR from "@/components/ShareQR";
 import { useGameStore } from "@/store";
 import {
   matchArchetype,
@@ -242,6 +243,7 @@ export default function ResultStage() {
           >
             再测一次 →
           </button>
+          <ShareQR delay={1.5} size={72} />
         </motion.div>
 
         {/* 支持作者 */}
@@ -272,7 +274,7 @@ export default function ResultStage() {
               </p>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="flex flex-col items-center">
                 <img
                   src="/receive.jpg"
@@ -288,14 +290,6 @@ export default function ResultStage() {
                   className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
                 />
                 <span className="mt-2 font-kai text-[10px] text-ink-900/50">加好友 · 进群</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <img
-                  src="/qrcode.png"
-                  alt="服务地址二维码"
-                  className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
-                />
-                <span className="mt-2 font-kai text-[10px] text-ink-900/50">分享给朋友</span>
               </div>
             </div>
           </div>

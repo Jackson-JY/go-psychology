@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import InkParticles from "@/components/InkParticles";
 import Seal from "@/components/Seal";
+import ShareQR from "@/components/ShareQR";
 import { useGameStore, type ExperienceLevel } from "@/store";
 import { trackEvent, fetchScenarioConfig } from "@/lib/api";
 
@@ -151,6 +152,8 @@ export default function IntroStage() {
             数据概览
           </button>
         </motion.div>
+
+        <ShareQR delay={2.6} size={64} />
       </main>
 
       <footer className="font-mono text-[9px] tracking-widest text-ink-900/30">
