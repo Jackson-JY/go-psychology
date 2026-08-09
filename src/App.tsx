@@ -5,7 +5,6 @@ import TutorialStage from "@/stages/TutorialStage";
 import PlayStage from "@/stages/PlayStage";
 import LoadingStage from "@/stages/LoadingStage";
 import ResultStage from "@/stages/ResultStage";
-import PosterStage from "@/stages/PosterStage";
 import SgfUploadStage from "@/stages/SgfUploadStage";
 import SgfResultStage from "@/stages/SgfResultStage";
 import EditorLoginStage from "@/stages/EditorLoginStage";
@@ -36,7 +35,6 @@ export default function App() {
           {stage === "play" && <PlayStage />}
           {stage === "loading" && <LoadingStage />}
           {stage === "result" && <ResultStage />}
-          {stage === "poster" && <PosterStage />}
           {stage === "sgf-upload" && <SgfUploadStage />}
           {stage === "sgf-result" && <SgfResultStage />}
           {stage === "editor-login" && <EditorLoginStage />}

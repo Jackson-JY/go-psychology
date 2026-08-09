@@ -100,7 +100,4 @@ body {
   filter: drop-shadow(0 2px 6px rgba(200, 57, 43, 0.35));
 }
 
-/* 防止海报截图时字体未加载 */
-.poster-snapshot {
-  font-display: block;
-}
+

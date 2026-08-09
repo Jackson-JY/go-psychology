@@ -7,8 +7,6 @@ import type { StatsSummary } from "@/lib/types";
 const EVENT_LABELS: Record<string, string> = {
   test_start: "开始测试",
   test_complete: "完成测试",
-  poster_generate: "生成海报",
-  poster_download: "下载海报",
   sgf_analyze: "SGF 分析",
   image_analyze: "图片分析",
   scenario_save: "保存题目",

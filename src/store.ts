@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { AnalyzeResponse, MoveRecord, PuzzleId, SgfAnalysisResponse, Scenario } from "@/lib/types";
 
-export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "poster" | "sgf-upload" | "sgf-loading" | "sgf-result" | "editor" | "editor-login" | "stats";
+export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "sgf-upload" | "sgf-loading" | "sgf-result" | "editor" | "editor-login" | "stats";
 export type ExperienceLevel = "beginner" | "skilled";
 export type Gender = "male" | "female";
 
@@ -26,7 +26,6 @@ interface GameState {
   setError: (error: string | null) => void;
   setGender: (gender: Gender) => void;
   setScenarios: (scenarios: Scenario[]) => void;
-  goPoster: () => void;
   restart: () => void;
   goSgfUpload: () => void;
   goEditor: () => void;
@@ -96,7 +95,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   setError: (error) => set({ error, stage: "result" }),
   setGender: (gender) => set({ gender }),
   setScenarios: (scenarios) => set({ scenarios }),
-  goPoster: () => set({ stage: "poster" }),
   goSgfUpload: () => set({ stage: "sgf-upload", sgfResult: null, error: null }),
   goEditor: () => set({ stage: "editor" }),
   goEditorLogin: () => set({ stage: "editor-login" }),

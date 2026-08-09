@@ -10,7 +10,7 @@ import {
 } from "@/lib/archetypes";
 
 export default function ResultStage() {
-  const { result, error, goPoster, restart, gender, setGender } = useGameStore();
+  const { result, error, restart, gender, setGender } = useGameStore();
   const [typedComment, setTypedComment] = useState("");
 
   const archetype = useMemo(() => {
@@ -236,14 +236,11 @@ export default function ResultStage() {
           transition={{ delay: 1.4 }}
           className="px-5 pb-8 flex flex-col items-center gap-3"
         >
-          <button onClick={goPoster} className="btn-ink w-full max-w-xs">
-            生成专属海报 →
-          </button>
           <button
             onClick={restart}
-            className="font-mono text-[11px] tracking-widest text-ink-900/40 underline-offset-4 hover:underline"
+            className="btn-ink w-full max-w-xs"
           >
-            重新测试
+            再测一次 →
           </button>
         </motion.div>
 
