@@ -275,22 +275,30 @@ export default function ResultStage() {
               </p>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-3 gap-3">
               <div className="flex flex-col items-center">
                 <img
                   src="/receive.jpg"
                   alt="赞赏码"
-                  className="h-32 w-32 rounded-md border border-ink-900/10 object-contain bg-white"
+                  className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
                 />
-                <span className="mt-2 font-kai text-[11px] text-ink-900/50">赞赏支持</span>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">赞赏支持</span>
               </div>
               <div className="flex flex-col items-center">
                 <img
                   src="/weixin.png"
                   alt="微信二维码"
-                  className="h-32 w-32 rounded-md border border-ink-900/10 object-contain bg-white"
+                  className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
                 />
-                <span className="mt-2 font-kai text-[11px] text-ink-900/50">加好友 · 进群</span>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">加好友 · 进群</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <img
+                  src="/qrcode.png"
+                  alt="服务地址二维码"
+                  className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
+                />
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">分享给朋友</span>
               </div>
             </div>
           </div>
