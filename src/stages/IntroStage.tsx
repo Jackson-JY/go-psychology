@@ -153,7 +153,7 @@ export default function IntroStage() {
           </button>
         </motion.div>
 
-        <ShareQR delay={2.6} size={64} />
+        <ShareQR delay={2.6} />
       </main>
 
       <footer className="font-mono text-[9px] tracking-widest text-ink-900/30">

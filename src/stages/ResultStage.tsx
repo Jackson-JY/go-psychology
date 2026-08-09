@@ -243,7 +243,7 @@ export default function ResultStage() {
           >
             再测一次 →
           </button>
-          <ShareQR delay={1.5} size={72} />
+          <ShareQR delay={1.5} />
         </motion.div>
 
         {/* 支持作者 */}
