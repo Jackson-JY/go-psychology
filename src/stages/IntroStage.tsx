@@ -28,7 +28,7 @@ export default function IntroStage() {
   const goStats = useGameStore((s) => s.goStats);
 
   return (
-    <div className="relative flex h-[100dvh] min-h-[560px] flex-col items-center overflow-hidden bg-paper-100 px-6 py-10">
+    <div className="relative flex min-h-[100dvh] flex-col items-center overflow-x-hidden bg-paper-100 px-6 py-8">
       <InkParticles />
 
       {/* 顶部 logo 印 */}
@@ -54,7 +54,7 @@ export default function IntroStage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6"
+          className="mb-4"
         >
           <div className="font-serif text-[64px] leading-none text-ink-900 sm:text-[80px]" style={{ fontWeight: 900 }}>
             黑白
@@ -68,7 +68,7 @@ export default function IntroStage() {
           </div>
         </motion.div>
 
-        <div className="mb-8 space-y-1">
+        <div className="mb-6 space-y-1">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -126,7 +126,7 @@ export default function IntroStage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.0, duration: 0.6 }}
-          className="mt-8 flex flex-col items-center gap-1 font-mono text-[10px] tracking-widest text-ink-900/40"
+          className="mt-6 flex flex-col items-center gap-1 font-mono text-[10px] tracking-widest text-ink-900/40"
         >
           <span>4 关残局 · 1 分钟 · 即玩即测</span>
           <span className="text-cinnabar/60">凭第一直觉落子</span>
@@ -136,7 +136,7 @@ export default function IntroStage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.4, duration: 0.6 }}
-          className="mt-4 flex items-center gap-3"
+          className="mt-3 flex items-center gap-3"
         >
           <button
             onClick={goEditorLogin}
@@ -152,11 +152,11 @@ export default function IntroStage() {
             数据概览
           </button>
         </motion.div>
-
-        <ShareQR delay={2.6} />
       </main>
 
-      <footer className="font-mono text-[9px] tracking-widest text-ink-900/30">
+      <ShareQR delay={2.6} compact />
+
+      <footer className="mt-4 font-mono text-[9px] tracking-widest text-ink-900/30">
         BAI · DAO · PSYCHE / 黑白潜意识心理沙盘
       </footer>
     </div>

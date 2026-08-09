@@ -3,10 +3,12 @@ import { motion } from "framer-motion";
 interface ShareQRProps {
   /** 延迟动画时间（秒） */
   delay?: number;
+  /** 紧凑模式（首页用，二维码稍小） */
+  compact?: boolean;
 }
 
 /** 分享二维码组件 — 扫码进入服务 */
-export default function ShareQR({ delay = 0 }: ShareQRProps) {
+export default function ShareQR({ delay = 0, compact = false }: ShareQRProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -14,11 +16,12 @@ export default function ShareQR({ delay = 0 }: ShareQRProps) {
       transition={{ delay, duration: 0.6 }}
       className="flex flex-col items-center gap-2"
     >
-      <div className="relative rounded-xl border-2 border-cinnabar/30 bg-white p-3 shadow-sm">
+      <div className={`relative rounded-xl border-2 border-cinnabar/30 bg-white shadow-sm ${compact ? "p-2" : "p-3"}`}>
         <img
           src="/qrcode.png"
           alt="扫码进入"
-          className="h-24 w-24 object-contain"
+          className="object-contain"
+          style={{ width: compact ? 80 : 96, height: compact ? 80 : 96 }}
         />
         {/* 四角装饰 */}
         <span className="absolute -left-1 -top-1 h-3 w-3 rounded-bl-sm rounded-tl-lg border-l-2 border-t-2 border-cinnabar" />
