@@ -52,7 +52,8 @@ export default function ResultStage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-paper-100">
+    <div className="relative min-h-[100dvh] bg-paper-100">
+      <ShareQR delay={0.5} floating />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -243,7 +244,6 @@ export default function ResultStage() {
           >
             再测一次 →
           </button>
-          <ShareQR delay={1.5} />
         </motion.div>
 
         {/* 支持作者 */}

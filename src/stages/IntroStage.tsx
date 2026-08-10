@@ -30,6 +30,7 @@ export default function IntroStage() {
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center overflow-x-hidden bg-paper-100 px-6 py-8">
       <InkParticles />
+      <ShareQR delay={0.8} floating />
 
       {/* 顶部 logo 印 */}
       <motion.div
@@ -153,8 +154,6 @@ export default function IntroStage() {
           </button>
         </motion.div>
       </main>
-
-      <ShareQR delay={2.6} compact />
 
       <footer className="mt-4 font-mono text-[9px] tracking-widest text-ink-900/30">
         BAI · DAO · PSYCHE / 黑白潜意识心理沙盘
