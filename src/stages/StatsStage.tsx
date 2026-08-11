@@ -13,7 +13,7 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 export default function StatsStage() {
-  const restart = useGameStore((s) => s.restart);
+  const goAdmin = useGameStore((s) => s.goAdmin);
   const [password, setPassword] = useState("");
   const [days, setDays] = useState(7);
   const [stats, setStats] = useState<StatsSummary | null>(null);
@@ -78,10 +78,10 @@ export default function StatsStage() {
           </form>
 
           <button
-            onClick={restart}
+            onClick={goAdmin}
             className="block w-full text-center font-mono text-[10px] tracking-widest text-ink-900/40 underline hover:text-cinnabar"
           >
-            返回首页
+            返回后台
           </button>
         </motion.div>
       </div>
@@ -96,7 +96,7 @@ export default function StatsStage() {
           <p className="font-mono text-[10px] tracking-widest text-ink-900/50">访问与行为统计</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={restart} className="btn-outline text-xs">返回首页</button>
+          <button onClick={goAdmin} className="btn-outline text-xs">返回后台</button>
           <button onClick={() => setAuthed(false)} className="btn-outline text-xs">退出</button>
         </div>
       </header>

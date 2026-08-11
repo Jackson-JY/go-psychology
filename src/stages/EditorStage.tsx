@@ -50,7 +50,7 @@ function rectToStyle(
 }
 
 export default function EditorStage() {
-  const restart = useGameStore((s) => s.restart);
+  const goAdmin = useGameStore((s) => s.goAdmin);
   const goStats = useGameStore((s) => s.goStats);
   const [config, setConfig] = useState<ScenarioConfig[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -283,7 +283,7 @@ export default function EditorStage() {
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-serif text-xl font-semibold text-ink-900">题目编辑器</h1>
         <div className="flex gap-2">
-          <button onClick={restart} className="btn-outline text-xs">返回首页</button>
+          <button onClick={goAdmin} className="btn-outline text-xs">返回后台</button>
           <button onClick={goStats} className="btn-outline text-xs">数据概览</button>
           <button onClick={handleSave} disabled={loading} className="btn-primary text-xs">
             {loading ? "保存中..." : "保存"}

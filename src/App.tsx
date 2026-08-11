@@ -10,10 +10,24 @@ import SgfResultStage from "@/stages/SgfResultStage";
 import EditorLoginStage from "@/stages/EditorLoginStage";
 import EditorStage from "@/stages/EditorStage";
 import StatsStage from "@/stages/StatsStage";
+import AdminStage from "@/stages/AdminStage";
 import { useGameStore } from "@/store";
 
 export default function App() {
   const stage = useGameStore((s) => s.stage);
+  const goAdmin = useGameStore((s) => s.goAdmin);
+
+  // 监听哈希路由：#admin 进入后台
+  useEffect(() => {
+    const check = () => {
+      if (window.location.hash === "#admin") {
+        goAdmin();
+      }
+    };
+    check();
+    window.addEventListener("hashchange", check);
+    return () => window.removeEventListener("hashchange", check);
+  }, [goAdmin]);
 
   // 进入 loading 时自动滚动到顶
   useEffect(() => {
@@ -40,6 +54,7 @@ export default function App() {
           {stage === "editor-login" && <EditorLoginStage />}
           {stage === "editor" && <EditorStage />}
           {stage === "stats" && <StatsStage />}
+          {stage === "admin" && <AdminStage />}
         </motion.div>
       </AnimatePresence>
     </div>

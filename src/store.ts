@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { AnalyzeResponse, MoveRecord, PuzzleId, SgfAnalysisResponse, Scenario } from "@/lib/types";
 
-export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "sgf-upload" | "sgf-loading" | "sgf-result" | "editor" | "editor-login" | "stats";
+export type Stage = "intro" | "tutorial" | "play" | "loading" | "result" | "sgf-upload" | "sgf-loading" | "sgf-result" | "editor" | "editor-login" | "stats" | "admin";
 export type ExperienceLevel = "beginner" | "skilled";
 export type Gender = "male" | "female";
 
@@ -31,6 +31,7 @@ interface GameState {
   goEditor: () => void;
   goEditorLogin: () => void;
   goStats: () => void;
+  goAdmin: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -99,6 +100,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   goEditor: () => set({ stage: "editor" }),
   goEditorLogin: () => set({ stage: "editor-login" }),
   goStats: () => set({ stage: "stats" }),
+  goAdmin: () => set({ stage: "admin" }),
   restart: () =>
     set({
       stage: "intro",

@@ -24,8 +24,6 @@ export default function IntroStage() {
   };
 
   const goSgfUpload = useGameStore((s) => s.goSgfUpload);
-  const goEditorLogin = useGameStore((s) => s.goEditorLogin);
-  const goStats = useGameStore((s) => s.goStats);
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center overflow-x-hidden bg-paper-100 px-6 py-8">
@@ -131,27 +129,6 @@ export default function IntroStage() {
         >
           <span>4 关残局 · 1 分钟 · 即玩即测</span>
           <span className="text-cinnabar/60">凭第一直觉落子</span>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.4, duration: 0.6 }}
-          className="mt-3 flex items-center gap-3"
-        >
-          <button
-            onClick={goEditorLogin}
-            className="font-mono text-[10px] tracking-widest text-ink-900/30 underline hover:text-cinnabar"
-          >
-            管理题目
-          </button>
-          <span className="text-ink-900/20">·</span>
-          <button
-            onClick={goStats}
-            className="font-mono text-[10px] tracking-widest text-ink-900/30 underline hover:text-cinnabar"
-          >
-            数据概览
-          </button>
         </motion.div>
       </main>
 

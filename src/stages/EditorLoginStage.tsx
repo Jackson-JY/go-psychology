@@ -6,7 +6,7 @@ import { fetchScenarioConfig } from "@/lib/api";
 export default function EditorLoginStage() {
   const goEditor = useGameStore((s) => s.goEditor);
   const setScenarios = useGameStore((s) => s.setScenarios);
-  const restart = useGameStore((s) => s.restart);
+  const goAdmin = useGameStore((s) => s.goAdmin);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,10 +71,10 @@ export default function EditorLoginStage() {
         </form>
 
         <button
-          onClick={restart}
+          onClick={goAdmin}
           className="block w-full text-center font-mono text-[10px] tracking-widest text-ink-900/40 underline hover:text-cinnabar"
         >
-          返回首页
+          返回后台
         </button>
       </motion.div>
     </div>
