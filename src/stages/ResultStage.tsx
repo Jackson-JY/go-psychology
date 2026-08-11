@@ -268,9 +268,9 @@ export default function ResultStage() {
                 </span>
               </p>
               <p className="mt-3 font-kai text-[12px] leading-relaxed text-ink-900/50">
-                如果你有更棒的测试题目或棋谱分析想法，
+                如果你也对围棋和心理学感兴趣，欢迎添加好友一起交流。
                 <br />
-                也欢迎加微信交流，一起让测试更准确、更有趣。
+                如果你有更棒的测试题目或棋谱分析想法，也欢迎分享。
               </p>
             </div>
 
