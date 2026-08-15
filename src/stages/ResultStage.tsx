@@ -300,7 +300,7 @@ export default function ResultStage() {
               <div className="flex flex-col items-center">
                 <div className="rounded-md border border-cinnabar/20 p-1.5 bg-white">
                   <img
-                    src="/weixin.png"
+                    src="/weixin.jpg"
                     alt="加个好友"
                     className="h-24 w-24 rounded-sm object-contain"
                   />

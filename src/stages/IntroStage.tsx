@@ -10,6 +10,7 @@ export default function IntroStage() {
   const start = useGameStore((s) => s.start);
   const setScenarios = useGameStore((s) => s.setScenarios);
   const [loading, setLoading] = useState(false);
+  const [showSgfComingSoon, setShowSgfComingSoon] = useState(false);
 
   const handleStart = async (level: ExperienceLevel) => {
     setLoading(true);
@@ -22,8 +23,6 @@ export default function IntroStage() {
     }
     start(level);
   };
-
-  const goSgfUpload = useGameStore((s) => s.goSgfUpload);
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center overflow-x-hidden bg-paper-100 px-6 py-8">
@@ -113,7 +112,7 @@ export default function IntroStage() {
           </button>
           <div className="my-1 h-px w-full bg-ink-900/10" />
           <button
-            onClick={goSgfUpload}
+            onClick={() => setShowSgfComingSoon(true)}
             className="flex items-center justify-center gap-2 rounded-sm border border-cinnabar/20 bg-cinnabar/5 px-6 py-3 font-kai text-sm text-cinnabar transition-colors hover:bg-cinnabar hover:text-white"
           >
             <span className="font-mono text-[10px]">SGF</span>
@@ -135,6 +134,74 @@ export default function IntroStage() {
       <footer className="mt-4 font-mono text-[9px] tracking-widest text-ink-900/30">
         BAI · DAO · PSYCHE / 黑白潜意识心理沙盘
       </footer>
+
+      {/* SGF 棋谱分析 · 开发中浮层 */}
+      {showSgfComingSoon && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 px-6 backdrop-blur-sm"
+          onClick={() => setShowSgfComingSoon(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-sm border border-ink-900/10 bg-paper-100 p-6 shadow-2xl"
+          >
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-cinnabar/30 bg-cinnabar/5">
+                <span className="font-serif text-xl text-cinnabar">棋</span>
+              </div>
+              <h3 className="font-serif text-lg font-semibold text-ink-900">
+                正在接入 KataGo
+              </h3>
+              <p className="mt-1 font-mono text-[10px] tracking-[0.25em] text-ink-900/40">
+                SGF DEEP ANALYSIS · WIP
+              </p>
+            </div>
+
+            <p className="mt-5 font-kai text-[13px] leading-relaxed text-ink-900/65 text-center">
+              上传棋谱的深度分析功能正在开发中，
+              <br />
+              我们正在接入 <span className="font-semibold text-cinnabar">KataGo</span> 引擎，
+              <br />
+              结合棋力评估与五维心理模型，
+              <br />
+              为你的每一局棋，写一份专属侧写。
+            </p>
+            <p className="mt-4 font-kai text-[12px] leading-relaxed text-ink-900/50 text-center">
+              敬请期待。
+              <br />
+              欢迎加好友入群，第一时间获得最新进展。
+            </p>
+
+            <div className="mt-5 flex justify-center">
+              <div className="flex flex-col items-center">
+                <div className="rounded-md border border-cinnabar/25 p-1.5 bg-white">
+                  <img
+                    src="/weixin.jpg"
+                    alt="加好友入群"
+                    className="h-28 w-28 rounded-sm object-contain"
+                  />
+                </div>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">
+                  加好友 · 入群跟进
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowSgfComingSoon(false)}
+              className="mt-6 w-full rounded-sm bg-ink-900 px-4 py-2.5 font-kai text-sm text-paper-100 transition-colors hover:bg-cinnabar"
+            >
+              我知道了
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
