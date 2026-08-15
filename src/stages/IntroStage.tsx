@@ -132,7 +132,7 @@ export default function IntroStage() {
       </main>
 
       <footer className="mt-4 font-mono text-[9px] tracking-widest text-ink-900/30">
-        BAI · DAO · PSYCHE / 黑白潜意识心理沙盘
+        BAI · HEI · PSYCHE / 黑白潜意识
       </footer>
 
       {/* SGF 棋谱分析 · 开发中浮层 */}
