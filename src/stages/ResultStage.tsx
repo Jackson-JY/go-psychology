@@ -256,40 +256,56 @@ export default function ResultStage() {
           <div className="rounded-lg border border-ink-900/8 bg-paper-200/60 p-5">
             <div className="mb-1 text-center">
               <div className="font-mono text-[10px] tracking-[0.3em] text-ink-900/40">
-                SUPPORT · 连接作者
+                同行 · 同行者
               </div>
-              <p className="mt-2 font-kai text-[13px] leading-relaxed text-ink-900/60">
-                如果这次测写触动了你，
+              <p className="mt-3 font-kai text-[13px] leading-relaxed text-ink-900/65">
+                黑白之间，我们相逢于同一局棋。
                 <br />
-                可以请作者喝杯茶 ☕
+                如果你也被棋盘上的倒影触动，
+                <br />
+                愿以清茶回敬这份共鸣 ☕
+              </p>
+              <p className="mt-3 font-kai text-[11px] leading-relaxed text-ink-900/45">
+                你的每一份心意，都会化为：
+                <br />
+                更稳定的服务器 · 接入 KataGo 引擎 · 更深刻的 DeepSeek 心理剖析
+                <br />
+                让这张棋盘，陪更多人走得更远。
+              </p>
+              <div className="mx-auto my-3 h-px w-10 bg-ink-900/15" />
+              <p className="font-kai text-[12px] leading-relaxed text-ink-900/55">
+                围棋是一场对话，心理学也是。
+                <br />
+                如果你也在这两者间寻找些什么，
+                <br />
+                加个微信，做棋友，也做同路人。
                 <br />
                 <span className="text-[11px] text-ink-900/40">
-                  用于服务器维护与接入 KataGo / DeepSeek 更精准分析
+                  有更好的题目？更妙的分析思路？期待你的那一手。
                 </span>
-              </p>
-              <p className="mt-3 font-kai text-[12px] leading-relaxed text-ink-900/50">
-                如果你也对围棋和心理学感兴趣，欢迎添加好友一起交流。
-                <br />
-                如果你有更棒的测试题目或棋谱分析想法，也欢迎分享。
               </p>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-4">
               <div className="flex flex-col items-center">
-                <img
-                  src="/receive.jpg"
-                  alt="赞赏码"
-                  className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
-                />
-                <span className="mt-2 font-kai text-[10px] text-ink-900/50">赞赏支持</span>
+                <div className="rounded-md border border-cinnabar/20 p-1.5 bg-white">
+                  <img
+                    src="/receive.jpg"
+                    alt="清茶一盏"
+                    className="h-24 w-24 rounded-sm object-contain"
+                  />
+                </div>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">清茶一盏</span>
               </div>
               <div className="flex flex-col items-center">
-                <img
-                  src="/weixin.png"
-                  alt="微信二维码"
-                  className="h-24 w-24 rounded-md border border-ink-900/10 object-contain bg-white"
-                />
-                <span className="mt-2 font-kai text-[10px] text-ink-900/50">加好友 · 进群</span>
+                <div className="rounded-md border border-cinnabar/20 p-1.5 bg-white">
+                  <img
+                    src="/weixin.png"
+                    alt="加个好友"
+                    className="h-24 w-24 rounded-sm object-contain"
+                  />
+                </div>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">棋友 · 同路人</span>
               </div>
             </div>
           </div>
