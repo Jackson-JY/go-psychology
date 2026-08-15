@@ -168,9 +168,11 @@ export default function IntroStage() {
               <br />
               我们正在接入 <span className="font-semibold text-cinnabar">KataGo</span> 引擎，
               <br />
-              结合棋力评估与五维心理模型，
+              结合每步棋的胜率波动幅度进行潜意识分析，
               <br />
-              为你的每一局棋，写一份专属侧写。
+              叠加棋力评估与五维心理模型，
+              <br />
+              为你的每一局棋，写一份更准确的专属侧写。
             </p>
             <p className="mt-4 font-kai text-[12px] leading-relaxed text-ink-900/50 text-center">
               敬请期待。
