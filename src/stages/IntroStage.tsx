@@ -178,20 +178,32 @@ export default function IntroStage() {
               敬请期待。
               <br />
               欢迎加好友入群，第一时间获得最新进展。
+              <br />
+              <span className="text-[11px] text-cinnabar/70">
+                若这个项目让你有所期待，也可以清茶一杯，共赴此局 ☕
+              </span>
             </p>
 
-            <div className="mt-5 flex justify-center">
+            <div className="mt-5 grid grid-cols-2 gap-4">
+              <div className="flex flex-col items-center">
+                <div className="rounded-md border border-cinnabar/20 p-1.5 bg-white">
+                  <img
+                    src="/receive.jpg"
+                    alt="清茶一杯"
+                    className="h-24 w-24 rounded-sm object-contain"
+                  />
+                </div>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">清茶 · 支持</span>
+              </div>
               <div className="flex flex-col items-center">
                 <div className="rounded-md border border-cinnabar/25 p-1.5 bg-white">
                   <img
                     src="/weixin.jpg"
                     alt="加好友入群"
-                    className="h-28 w-28 rounded-sm object-contain"
+                    className="h-24 w-24 rounded-sm object-contain"
                   />
                 </div>
-                <span className="mt-2 font-kai text-[10px] text-ink-900/50">
-                  加好友 · 入群跟进
-                </span>
+                <span className="mt-2 font-kai text-[10px] text-ink-900/50">加好友 · 入群</span>
               </div>
             </div>
 
