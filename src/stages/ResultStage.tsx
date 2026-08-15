@@ -4,6 +4,7 @@ import RadarChart from "@/components/RadarChart";
 
 import Seal from "@/components/Seal";
 import ShareQR from "@/components/ShareQR";
+import MiniBoard from "@/components/MiniBoard";
 import { useGameStore } from "@/store";
 import {
   matchArchetype,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/archetypes";
 
 export default function ResultStage() {
-  const { result, error, restart, gender, setGender } = useGameStore();
+  const { result, error, restart, gender, setGender, moves, scenarios, experienceLevel } = useGameStore();
   const [typedComment, setTypedComment] = useState("");
 
   const archetype = useMemo(() => {
@@ -174,6 +175,36 @@ export default function ResultStage() {
                 # {tag}
               </span>
             ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="rounded-lg border border-ink-900/8 bg-paper-200/60 p-4"
+          >
+            <div className="mb-3 text-center font-mono text-[10px] tracking-widest text-ink-900/40">
+              你的四手棋
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              {moves.map((move, i) => {
+                const scenario = scenarios.find((s) => s.id === move.puzzleId);
+                const boardConfig = scenario?.boards[experienceLevel ?? "beginner"];
+                return (
+                  <div key={move.puzzleId} className="flex flex-col items-center gap-1.5">
+                    <MiniBoard
+                      boardSize={experienceLevel === "skilled" ? 13 : 9}
+                      stones={boardConfig?.stones ?? []}
+                      userMove={{ x: move.x, y: move.y }}
+                      size={64}
+                    />
+                    <span className="font-kai text-[10px] text-ink-900/50">
+                      第{i + 1}题
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </motion.div>
 
           <motion.div
