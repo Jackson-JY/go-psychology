@@ -21,16 +21,18 @@ export default function ShareQR({
         initial={{ opacity: 0, x: 16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay, duration: 0.5 }}
-        className="absolute right-3 top-3 z-20 flex flex-col items-center gap-1"
+        className="fixed right-3 top-3 z-50 flex flex-col items-center gap-1"
       >
-        <div className="rounded-lg border border-cinnabar/20 bg-white p-1.5 shadow-sm">
+        <div className="rounded-lg border-2 border-cinnabar/30 bg-white p-1.5 shadow-md">
           <img
             src="/qrcode.png"
             alt="扫码体验"
-            className="h-12 w-12 object-contain"
+            className="h-14 w-14 object-contain"
           />
         </div>
-        <span className="font-kai text-[9px] text-cinnabar/70">扫码体验</span>
+        <span className="font-kai text-[9px] font-medium text-cinnabar/80">
+          扫码体验
+        </span>
       </motion.div>
     );
   }
